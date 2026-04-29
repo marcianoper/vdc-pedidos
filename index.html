@@ -1494,44 +1494,44 @@ const DEFAULT_EMPLOYEES = ["Alison","Adriana Delgado","Ana Alvarado","Mónica","
 */
 const IMAGE_BASE_URL = "https://marcianoper.github.io/vdc-pedidos/img/";
 
+/*
+  IMÁGENES 100% ROBUSTAS:
+  GitHub Pages distingue mayúsculas, espacios y guiones.
+  Por eso aquí cada producto prueba varias rutas posibles hasta que una cargue.
+*/
 const PRODUCT_IMAGE_FILES = {
-  "lengua": "VISCERA R- LENGUA.png",
-  "higado": "VISCERA R- HIGADO.png",
-  "hígado": "VISCERA R- HIGADO.png",
-  "corazon": "VISCERA R- CORAZON.png",
-  "corazón": "VISCERA R- CORAZON.png",
-  "bofe": "VISCERA R- BOFE.png",
-  "cabeza": "VISCERA R- CABEZA.png",
-  "cabeza de rastro": "VISCERA R- CABEZA DE RASTRO.png",
-  "cabeza sin lengua": "VISCERA R- CABEZA SIN LENGUA.png",
+  "lengua": ["VISCERA R- LENGUA.png","VISCERA R-LENGUA.png","VISCERA R LENGUA.png","lengua.png"],
+  "higado": ["VISCERA R- HIGADO.png","VISCERA R-HIGADO.png","VISCERA R HIGADO.png","higado.png"],
+  "hígado": ["VISCERA R- HIGADO.png","VISCERA R-HIGADO.png","VISCERA R HIGADO.png","higado.png"],
+  "corazon": ["VISCERA R- CORAZON.png","VISCERA R-CORAZON.png","VISCERA R CORAZON.png","corazon.png"],
+  "corazón": ["VISCERA R- CORAZON.png","VISCERA R-CORAZON.png","VISCERA R CORAZON.png","corazon.png"],
+  "bofe": ["VISCERA R- BOFE.png","VISCERA R-BOFE.png","VISCERA R BOFE.png","bofe.png"],
+  "cabeza": ["VISCERA R- CABEZA.png","VISCERA R-CABEZA.png","VISCERA R CABEZA.png","cabeza.png"],
+  "cabeza de rastro": ["VISCERA R- CABEZA DE RASTRO.png","VISCERA R-CABEZA DE RASTRO.png","cabeza-rastro.png","cabeza_de_rastro.png"],
+  "cabeza sin lengua": ["VISCERA R- CABEZA SIN LENGUA.png","VISCERA R-CABEZA SIN LENGUA.png","cabeza-sin-lengua.png","cabeza_sin_lengua.png"],
 
-  "panza": "VISCERA B- PANZA.png",
-  "libro": "VISCERA B-LIBRO.png",
-  "pata blanca": "VISCERA B-PATA BLANCA.png",
-  "pata morena": "VISCERA B-PATA MORENA.png",
-  "tripa": "VISCERA B-TRIPA.png",
-  "tripa de rastro": "VISCERA B-TRIPA DE RASTRO.png",
-  "quajo": "VISCERA B- QUAJO.png",
-  "cuajo": "VISCERA B- QUAJO.png",
-  "teleco": "VISCERA B-TELECO.png",
+  "panza": ["VISCERA B-PANZA.png","VISCERA B- PANZA.png","VISCERA B PANZA.png","panza.png"],
+  "libro": ["VISCERA B-LIBRO.png","VISCERA B- LIBRO.png","VISCERA B LIBRO.png","libro.png"],
+  "pata blanca": ["VISCERA B-PATA BLANCA.png","VISCERA B- PATA BLANCA.png","pata-blanca.png","pata_blanca.png"],
+  "pata morena": ["VISCERA B-PATA MORENA.png","VISCERA B- PATA MORENA.png","pata-morena.png","pata_morena.png"],
+  "tripa": ["VISCERA B-TRIPA.png","VISCERA B- TRIPA.png","VISCERA B TRIPA.png","tripa.png"],
+  "tripa de rastro": ["VISCERA B-TRIPA DE RASTRO.png","VISCERA B- TRIPA DE RASTRO.png","tripa-rastro.png","tripa_de_rastro.png"],
+  "quajo": ["VISCERA B- QUAJO.png","VISCERA B-QUAJO.png","VISCERA B QUAJO.png","quajo.png","cuajo.png"],
+  "cuajo": ["VISCERA B- QUAJO.png","VISCERA B-QUAJO.png","VISCERA B QUAJO.png","quajo.png","cuajo.png"],
+  "teleco": ["VISCERA B-TELECO.png","VISCERA B- TELECO.png","teleco.png"],
 
-  "menudo canadian": "CAJAS-MENUDO CANADIAN.png",
-  "menudo excel": "CAJAS-MENUDO EXCEL.png",
-  "menudo nacional": "CAJAS-MENUDO NACIONAL.png",
-  "menudo washington": "CAJAS-MENUDO WASHINGTON.png",
-  "caja menudo canadian": "CAJAS-MENUDO CANADIAN.png",
-  "caja menudo excel": "CAJAS-MENUDO EXCEL.png",
-  "caja menudo national": "CAJAS-MENUDO NACIONAL.png",
-  "caja menudo nacional": "CAJAS-MENUDO NACIONAL.png",
-  "caja menudo washington": "CAJAS-MENUDO WASHINGTON.png",
-  "cajas menudo canadian": "CAJAS-MENUDO CANADIAN.png",
-  "cajas menudo excel": "CAJAS-MENUDO EXCEL.png",
-  "cajas menudo nacional": "CAJAS-MENUDO NACIONAL.png",
-  "cajas menudo washington": "CAJAS-MENUDO WASHINGTON.png",
-  "caja menudo visceras": "CAJAS-MENUDO VISCERAS.png",
-  "cajas menudo visceras": "CAJAS-MENUDO VISCERAS.png"
+  "menudo canadian": ["CAJAS-MENUDO CANADIAN.png","CAJAS-MENUDO-CANADIAN.png","menudo-canadian.png"],
+  "menudo excel": ["CAJAS-MENUDO EXCEL.png","CAJAS-MENUDO-EXCEL.png","menudo-excel.png"],
+  "menudo nacional": ["CAJAS-MENUDO NACIONAL.png","CAJAS-MENUDO NACIONAL .png","CAJAS-MENUDO-NACIONAL.png","CAJAS-MENUDO NATIONAL.png","menudo-nacional.png"],
+  "menudo washington": ["CAJAS-MENUDO WASHINGTON.png","CAJAS-MENUDO-WASHINGTON.png","menudo-washington.png"],
+  "caja menudo canadian": ["CAJAS-MENUDO CANADIAN.png","CAJAS-MENUDO-CANADIAN.png","menudo-canadian.png"],
+  "caja menudo excel": ["CAJAS-MENUDO EXCEL.png","CAJAS-MENUDO-EXCEL.png","menudo-excel.png"],
+  "caja menudo national": ["CAJAS-MENUDO NACIONAL.png","CAJAS-MENUDO NATIONAL.png","menudo-nacional.png"],
+  "caja menudo nacional": ["CAJAS-MENUDO NACIONAL.png","CAJAS-MENUDO-NACIONAL.png","menudo-nacional.png"],
+  "caja menudo washington": ["CAJAS-MENUDO WASHINGTON.png","CAJAS-MENUDO-WASHINGTON.png","menudo-washington.png"],
+  "caja menudo visceras": ["CAJAS-MENUDO VISCERAS.png","CAJAS-MENUDO-VISCERAS.png","menudo-visceras.png"],
+  "cajas menudo visceras": ["CAJAS-MENUDO VISCERAS.png","CAJAS-MENUDO-VISCERAS.png","menudo-visceras.png"]
 };
-
 
 const DEFAULT_CLIENTS = [
   "8 De Junio",
@@ -2072,33 +2072,57 @@ function normalizeImageKey(str){
     .trim();
 }
 
-function productImageUrl(product){
+function imageUrlFromFile(file){
+  return IMAGE_BASE_URL + file
+    .split("/")
+    .map(part => encodeURIComponent(part))
+    .join("/");
+}
+
+function productImageCandidates(product){
   const key = normalizeImageKey(product.name);
-  const file = PRODUCT_IMAGE_FILES[key];
+  const files = PRODUCT_IMAGE_FILES[key] || [];
 
-  // Primero: imagen oficial por nombre desde GitHub Pages.
-  if(file){
-    return IMAGE_BASE_URL + encodeURIComponent(file);
-  }
+  const candidates = files.map(imageUrlFromFile);
 
-  // Segundo: si el producto trae una URL completa, úsala.
   if(product.image && /^https?:\/\//i.test(product.image)){
-    return product.image;
+    candidates.push(product.image);
   }
 
-  // Tercero: si trae img/algo.png, conviértelo a URL completa.
   if(product.image && product.image.startsWith("img/")){
-    return "https://marcianoper.github.io/vdc-pedidos/" + product.image;
+    candidates.push("https://marcianoper.github.io/vdc-pedidos/" + product.image.split("/").map(encodeURIComponent).join("/"));
   }
 
-  return "";
+  return [...new Set(candidates)];
+}
+
+function productImageUrl(product){
+  const candidates = productImageCandidates(product);
+  return candidates[0] || "";
 }
 
 function imageTag(product){
-  const src = productImageUrl(product);
-  if(!src) return productEmoji(product.category);
+  const candidates = productImageCandidates(product);
+  if(!candidates.length) return productEmoji(product.category);
 
-  return `<img src="${src}" onerror="this.style.display='none';this.parentElement.textContent='${productEmoji(product.category)}'">`;
+  const encoded = encodeURIComponent(JSON.stringify(candidates));
+  return `<img src="${candidates[0]}" data-imgs="${encoded}" data-idx="0" onerror="tryNextProductImage(this,'${productEmoji(product.category)}')">`;
+}
+
+function tryNextProductImage(img, fallback){
+  try{
+    const arr = JSON.parse(decodeURIComponent(img.dataset.imgs || "[]"));
+    let idx = Number(img.dataset.idx || 0) + 1;
+
+    if(idx < arr.length){
+      img.dataset.idx = String(idx);
+      img.src = arr[idx];
+      return;
+    }
+  }catch(e){}
+
+  img.style.display = "none";
+  img.parentElement.textContent = fallback;
 }
 
 function productEmoji(cat){
@@ -3185,12 +3209,10 @@ function toggleSetting(key){
 
 function repairImages(){
   // No borra tickets ni clientes.
-  // Solo vuelve a guardar productos y fuerza render con mapa oficial de imágenes.
-  products = products.map(p => ({...p, image: productImageUrl(p) || p.image || ""}));
-  save("vdc_pos_products", products);
+  // Fuerza a repintar usando la cadena de imágenes posibles.
   renderAdminProducts();
   renderPosProducts();
-  alert("Imágenes reparadas. Si alguna no aparece, revisa que el nombre del archivo exista exactamente en GitHub /img.");
+  alert("Imágenes reparadas. El sistema ahora prueba varias rutas hasta encontrar la correcta.");
 }
 
 function renderSettings(){
