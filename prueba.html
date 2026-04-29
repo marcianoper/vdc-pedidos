@@ -450,7 +450,7 @@
       border-radius:16px;
       box-shadow:0 18px 45px rgba(0,0,0,.16);
       overflow:auto;
-      max-height:330px;
+      max-height:520px;
       z-index:30;
       display:none;
     }
@@ -1243,10 +1243,24 @@
             </div>
           </div>
 
+          <div class="config-row" style="align-items:flex-start">
+            <div style="width:100%">
+              <b>Importar clientes manualmente</b>
+              <div style="color:var(--muted);margin-bottom:10px">
+                Pega aquí el JSON del sistema anterior o una lista de nombres, uno por línea.
+              </div>
+              <textarea id="clientImportBox" style="width:100%;min-height:130px;border:1px solid var(--line);border-radius:16px;padding:12px;font-weight:700;resize:vertical" placeholder='Ejemplo:\nAlejandro Medel\nDon Roque\n...'></textarea>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+                <button class="redbtn" onclick="importClientsFromBox()">Importar clientes</button>
+                <button class="outlinebtn" onclick="forceBaseClients()">Restaurar/mezclar base completa</button>
+              </div>
+            </div>
+          </div>
+
           <div class="config-row">
             <div>
               <b>Clientes cargados</b>
-              <div style="color:var(--muted)">Base importada del sistema anterior: autocompletado y alta automática de nuevos clientes.</div>
+              <div style="color:var(--muted)">Base importada del sistema anterior + clientes nuevos guardados en esta tablet.</div>
             </div>
             <button class="outlinebtn" onclick="alert('Clientes guardados: ' + clients.length)">Ver total</button>
           </div>
@@ -1844,7 +1858,11 @@ const CATEGORY_RULES = {
 
 let products = load("vdc_pos_products", DEFAULT_PRODUCTS);
 let tickets = load("vdc_pos_tickets", []);
-let clients = load("vdc_pos_clients", DEFAULT_CLIENTS);
+
+// IMPORTANTE:
+// Antes solo cargaba localStorage si ya existía, y podía quedarse con una lista vieja.
+// Ahora SIEMPRE combina la base completa del HTML + los clientes guardados en la tablet.
+let clients = mergeClientLists(DEFAULT_CLIENTS, load("vdc_pos_clients", []));
 let settings = load("vdc_pos_settings", {
   autoPrint:true,
   localSave:true,
@@ -2447,6 +2465,24 @@ function cleanClientName(name){
   return String(name || "").replace(/\s+/g," ").trim();
 }
 
+function mergeClientLists(baseList, savedList){
+  const map = new Map();
+
+  [...(baseList || []), ...(savedList || [])].forEach(c=>{
+    const clean = String(c || "").replace(/\s+/g," ").trim();
+    if(!clean) return;
+    const key = clean
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g,"")
+      .toLowerCase()
+      .trim();
+
+    if(!map.has(key)) map.set(key, clean);
+  });
+
+  return Array.from(map.values()).sort((a,b)=>a.localeCompare(b,"es"));
+}
+
 function normalizeClientStore(){
   const map = new Map();
   clients.forEach(c=>{
@@ -2489,9 +2525,9 @@ function renderClientSuggestions(){
   if(nq){
     matches = clients
       .filter(c => normalizeText(c).includes(nq))
-      .slice(0,12);
+      .slice(0,80);
   }else{
-    matches = clients.slice(0,12);
+    matches = clients.slice(0,80);
   }
 
   const exact = q && clients.some(c => normalizeText(c) === nq);
@@ -2512,6 +2548,14 @@ function renderClientSuggestions(){
       <span class="client-count">Cliente</span>
     </div>
   `).join("");
+
+  if(matches.length >= 80){
+    html += `
+      <div class="client-option" style="color:var(--muted);font-size:13px">
+        Escribe más letras para afinar la búsqueda...
+      </div>
+    `;
+  }
 
   box.innerHTML = html || `
     <div class="client-option" style="color:var(--muted)">Sin resultados</div>
@@ -2558,6 +2602,52 @@ document.addEventListener("click",(e)=>{
   const box = document.querySelector(".client-box");
   if(box && !box.contains(e.target)) hideClientSuggestions();
 });
+
+
+function importClientsFromBox(){
+  const box = document.getElementById("clientImportBox");
+  const txt = String(box?.value || "").trim();
+
+  if(!txt){
+    alert("Pega primero el JSON o la lista de clientes.");
+    return;
+  }
+
+  let imported = [];
+
+  try{
+    const parsed = JSON.parse(txt);
+
+    if(Array.isArray(parsed)){
+      imported = parsed.map(x => {
+        if(typeof x === "string") return x;
+        if(x && typeof x === "object") return x.name || x.cliente || x.nombre || "";
+        return "";
+      });
+    }
+  }catch(e){
+    imported = txt.split(/\n|,/g);
+  }
+
+  const before = clients.length;
+  clients = mergeClientLists(clients, imported);
+  save("vdc_pos_clients", clients);
+  normalizeClientStore();
+
+  const added = clients.length - before;
+  alert(`Clientes importados correctamente.\nNuevos agregados: ${added}\nTotal actual: ${clients.length}`);
+
+  if(box) box.value = "";
+}
+
+function forceBaseClients(){
+  const before = clients.length;
+  clients = mergeClientLists(DEFAULT_CLIENTS, clients);
+  save("vdc_pos_clients", clients);
+  normalizeClientStore();
+
+  alert(`Base completa mezclada.\nAntes: ${before}\nAhora: ${clients.length}`);
+}
 
 function renderEmployeeSelect(){
   const sel = document.getElementById("employeeSelect");
