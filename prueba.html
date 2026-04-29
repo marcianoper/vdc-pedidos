@@ -333,33 +333,33 @@
     .cut-row{
       display:flex;
       align-items:center;
-      gap:8px;
+      gap:10px;
       background:#fff7ed;
-      border:1px solid #fed7aa;
-      border-radius:15px;
-      padding:8px 10px;
-      margin-top:2px;
+      border:2px solid #fed7aa;
+      border-radius:18px;
+      padding:12px;
+      margin:12px 0;
     }
 
     .cut-row span{
       color:#9a3412;
       font-weight:950;
-      font-size:13px;
+      font-size:15px;
       white-space:nowrap;
     }
 
     .cut-select{
-      height:36px;
-      border-radius:11px;
-      border:1px solid #f3d2ba;
+      height:58px;
+      border-radius:16px;
+      border:2px solid #f3d2ba;
       background:#fff;
-      padding:0 10px;
-      font-weight:900;
+      padding:0 14px;
+      font-weight:950;
       color:var(--ink);
       outline:none;
       width:100%;
       min-width:0;
-      font-size:14px;
+      font-size:17px;
     }
 
     .cut-select:focus{
@@ -1640,7 +1640,7 @@ function renderCaptureCutOptions(){
     return;
   }
 
-  const cuts = getCutOptions(product).filter(c => c !== "Sin corte");
+  const cuts = getCutOptions(product);
 
   if(!cuts.length){
     captureState.cut = "Sin corte";
@@ -1648,9 +1648,9 @@ function renderCaptureCutOptions(){
     return;
   }
 
-  // Si no hay corte elegido, dejamos el primero como default para ahorrar toques.
-  if(!captureState.cut || captureState.cut === "Sin corte"){
-    captureState.cut = cuts[0];
+  // Por defecto queda "Sin corte"; el operador solo cambia cuando aplica.
+  if(!captureState.cut){
+    captureState.cut = "Sin corte";
   }
 
   wrap.innerHTML = `
