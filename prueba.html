@@ -1014,7 +1014,7 @@
     <div style="color:var(--muted);font-weight:800" id="capUnitLabel">Unidad</div>
 
     <div class="capture-help">
-      Toque una cantidad rápida y se captura automáticamente. Para otra cantidad, escríbala y presione Enter.
+      Toque una cantidad rápida o marque números. Al dejar de tocar 0.8 segundos, se captura automáticamente.
     </div>
 
     <div class="quick-captures" id="quickCaptures"></div>
@@ -1138,6 +1138,8 @@ let selectedUnits = {};
 let currentTicket = newTicket();
 let captureState = null;
 let editProductId = null;
+let tempNumber = "";
+let autoAddTimer = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   initNav();
@@ -1410,6 +1412,9 @@ function openCapture(productId, existingIndex=null){
     };
   }
 
+  clearTimeout(autoAddTimer);
+  tempNumber = "";
+
   document.getElementById("capProductName").textContent = captureState.name;
   document.getElementById("capUnitLabel").textContent = captureState.unit === "kg" ? "Captura en kilogramos" : "Captura en piezas";
   document.getElementById("capInput").value = "";
@@ -1421,6 +1426,9 @@ function openCapture(productId, existingIndex=null){
 }
 
 function closeCaptureModal(){
+  clearTimeout(autoAddTimer);
+  tempNumber = "";
+  document.getElementById("capInput").value = "";
   document.getElementById("captureModal").classList.remove("show");
   captureState = null;
 }
@@ -1441,22 +1449,63 @@ function renderQuickCaptureButtons(){
 /* Captura automática: al tocar un número rápido se agrega la tanda sin botón extra */
 function quickAddCapture(value){
   if(!captureState) return;
-  captureState.captures.push(Number(value));
+
+  clearTimeout(autoAddTimer);
+  tempNumber = "";
+
+  const val = Number(value);
+  if(!val || val <= 0) return;
+
+  captureState.captures.push(val);
   document.getElementById("capInput").value = "";
   renderCapturesList();
 }
 
 function keyNum(v){
+  if(!captureState) return;
+
   const inp = document.getElementById("capInput");
-  if(v === "." && inp.value.includes(".")) return;
-  inp.value += v;
+
+  if(v === "." && tempNumber.includes(".")) return;
+
+  tempNumber += v;
+  inp.value = tempNumber;
   inp.focus();
+
+  clearTimeout(autoAddTimer);
+
+  // OPCIÓN PRO:
+  // Si el operador deja de tocar números por 0.8 segundos,
+  // la cantidad se agrega automáticamente al ticket/tandas.
+  autoAddTimer = setTimeout(()=>{
+    const val = Number(tempNumber);
+    if(val > 0){
+      quickAddCapture(val);
+    }
+    tempNumber = "";
+    inp.value = "";
+  }, 800);
 }
 
 function clearCap(){
   const inp = document.getElementById("capInput");
-  inp.value = inp.value.slice(0,-1);
+
+  clearTimeout(autoAddTimer);
+
+  tempNumber = tempNumber.slice(0,-1);
+  inp.value = tempNumber;
   inp.focus();
+
+  if(tempNumber){
+    autoAddTimer = setTimeout(()=>{
+      const val = Number(tempNumber);
+      if(val > 0){
+        quickAddCapture(val);
+      }
+      tempNumber = "";
+      inp.value = "";
+    }, 800);
+  }
 }
 
 document.addEventListener("keydown",(e)=>{
@@ -1470,17 +1519,19 @@ document.addEventListener("keydown",(e)=>{
 function addCapture(){
   if(!captureState) return;
 
+  clearTimeout(autoAddTimer);
+
   const inp = document.getElementById("capInput");
-  const val = Number(inp.value);
+  const val = Number(inp.value || tempNumber);
 
   if(!val || val <= 0){
     alert("Captura una cantidad válida o toca una cantidad rápida.");
     return;
   }
 
-  captureState.captures.push(val);
+  quickAddCapture(val);
+  tempNumber = "";
   inp.value = "";
-  renderCapturesList();
   inp.focus();
 }
 
