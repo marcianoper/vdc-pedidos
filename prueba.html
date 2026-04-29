@@ -1014,7 +1014,7 @@
     <div style="color:var(--muted);font-weight:800" id="capUnitLabel">Unidad</div>
 
     <div class="capture-help">
-      Toque una cantidad rápida o marque números. Al dejar de tocar 0.8 segundos, se captura automáticamente.
+      Toque una cantidad rápida o marque números. Al dejar de tocar 0.8 segundos, se manda directo al ticket.
     </div>
 
     <div class="quick-captures" id="quickCaptures"></div>
@@ -1034,15 +1034,15 @@
       <button onclick="keyNum('0')">0</button>
       <button onclick="keyNum('.')">.</button>
       <button class="clearkey" onclick="clearCap()">⌫</button>
-      <button class="addkey" onclick="addCapture()">Guardar cantidad</button>
+      <button class="addkey" onclick="addCapture()">Capturar ahora</button>
       <button onclick="closeCaptureModal()">Cerrar</button>
     </div>
 
     <div class="captures-list" id="capturesList"></div>
 
     <div class="modal-actions">
-      <button class="secondary" onclick="closeCaptureModal()">Cancelar</button>
-      <button class="primary" style="width:220px" onclick="saveCaptureProduct()">Guardar producto</button>
+      <button class="secondary" onclick="closeCaptureModal()">Cerrar</button>
+      <button class="primary" style="width:220px" onclick="closeCaptureModal()">Listo</button>
     </div>
   </div>
 </div>
@@ -1447,6 +1447,37 @@ function renderQuickCaptureButtons(){
 }
 
 /* Captura automática: al tocar un número rápido se agrega la tanda sin botón extra */
+function commitCaptureDirectToTicket(value){
+  if(!captureState) return;
+
+  const val = Number(value);
+  if(!val || val <= 0) return;
+
+  const item = {
+    productId:captureState.productId,
+    name:captureState.name,
+    unit:captureState.unit,
+    captures:[val],
+    total:val
+  };
+
+  // Si ya existe el mismo producto con la misma unidad, agregamos la tanda ahí mismo.
+  const existingIndex = currentTicket.items.findIndex(x =>
+    x.productId === item.productId && x.unit === item.unit
+  );
+
+  if(existingIndex >= 0){
+    currentTicket.items[existingIndex].captures.push(val);
+    currentTicket.items[existingIndex].total = currentTicket.items[existingIndex].captures.reduce((a,b)=>a+Number(b),0);
+  }else{
+    currentTicket.items.push(item);
+  }
+
+  // Refrescamos ticket al instante, sin botón "Guardar producto".
+  renderTicket();
+  renderCapturesList();
+}
+
 function quickAddCapture(value){
   if(!captureState) return;
 
@@ -1456,9 +1487,8 @@ function quickAddCapture(value){
   const val = Number(value);
   if(!val || val <= 0) return;
 
-  captureState.captures.push(val);
   document.getElementById("capInput").value = "";
-  renderCapturesList();
+  commitCaptureDirectToTicket(val);
 }
 
 function keyNum(v){
@@ -1539,14 +1569,29 @@ function renderCapturesList(){
   const wrap = document.getElementById("capturesList");
   if(!captureState || !wrap) return;
 
-  const total = captureState.captures.reduce((a,b)=>a+Number(b),0);
+  const ticketItem = currentTicket.items.find(x =>
+    x.productId === captureState.productId && x.unit === captureState.unit
+  );
+
+  const captures = ticketItem ? ticketItem.captures : [];
+  const total = captures.reduce((a,b)=>a+Number(b),0);
+
+  if(!captures.length){
+    wrap.innerHTML = `
+      <div class="cap-row" style="background:#f8fafc;color:var(--muted)">
+        <span>Sin capturas todavía</span>
+        <span>0 ${captureState.unit}</span>
+      </div>
+    `;
+    return;
+  }
 
   wrap.innerHTML = `
     <div class="cap-row" style="background:#fff7ed">
-      <span>Total</span>
+      <span>Total enviado al ticket</span>
       <span>${moneylessFormat(total,captureState.unit)}</span>
     </div>
-    ${captureState.captures.map((c,i)=>`
+    ${captures.map((c,i)=>`
       <div class="cap-row">
         <span>Tanda ${i+1}: ${moneylessFormat(c,captureState.unit)}</span>
         <button onclick="removeCapture(${i})">×</button>
@@ -1556,7 +1601,23 @@ function renderCapturesList(){
 }
 
 function removeCapture(i){
-  captureState.captures.splice(i,1);
+  if(!captureState) return;
+
+  const idx = currentTicket.items.findIndex(x =>
+    x.productId === captureState.productId && x.unit === captureState.unit
+  );
+
+  if(idx < 0) return;
+
+  currentTicket.items[idx].captures.splice(i,1);
+
+  if(!currentTicket.items[idx].captures.length){
+    currentTicket.items.splice(idx,1);
+  }else{
+    currentTicket.items[idx].total = currentTicket.items[idx].captures.reduce((a,b)=>a+Number(b),0);
+  }
+
+  renderTicket();
   renderCapturesList();
 }
 
