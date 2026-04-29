@@ -1322,6 +1322,14 @@
 
           <div class="config-row">
             <div>
+              <b>Reparar imágenes en tablet</b>
+              <div style="color:var(--muted)">Usa URLs directas de GitHub Pages y fuerza a la tablet a volver a pintar las imágenes.</div>
+            </div>
+            <button class="redbtn" onclick="repairImages()">Reparar imágenes</button>
+          </div>
+
+          <div class="config-row">
+            <div>
               <b>Clientes cargados</b>
               <div style="color:var(--muted)">Base importada del sistema anterior + clientes nuevos guardados en esta tablet.</div>
             </div>
@@ -1472,6 +1480,58 @@ const DEFAULT_PRODUCTS = [
 ];
 
 const DEFAULT_EMPLOYEES = ["Alison","Adriana Delgado","Ana Alvarado","Mónica","Operador"];
+
+/* =========================================================
+   IMÁGENES 100% EN TABLET
+   =========================================================
+   Problema real:
+   La compu y la tablet guardan productos en localStorage diferente.
+   Si editas una ruta en la compu, la tablet conserva su copia vieja.
+
+   Solución:
+   El sistema ya NO depende de lo que tenga guardado la tablet.
+   Busca la imagen por NOMBRE DE PRODUCTO usando URL completa de GitHub Pages.
+*/
+const IMAGE_BASE_URL = "https://marcianoper.github.io/vdc-pedidos/img/";
+
+const PRODUCT_IMAGE_FILES = {
+  "lengua": "VISCERA R- LENGUA.png",
+  "higado": "VISCERA R- HIGADO.png",
+  "hígado": "VISCERA R- HIGADO.png",
+  "corazon": "VISCERA R- CORAZON.png",
+  "corazón": "VISCERA R- CORAZON.png",
+  "bofe": "VISCERA R- BOFE.png",
+  "cabeza": "VISCERA R- CABEZA.png",
+  "cabeza de rastro": "VISCERA R- CABEZA DE RASTRO.png",
+  "cabeza sin lengua": "VISCERA R- CABEZA SIN LENGUA.png",
+
+  "panza": "VISCERA B- PANZA.png",
+  "libro": "VISCERA B-LIBRO.png",
+  "pata blanca": "VISCERA B-PATA BLANCA.png",
+  "pata morena": "VISCERA B-PATA MORENA.png",
+  "tripa": "VISCERA B-TRIPA.png",
+  "tripa de rastro": "VISCERA B-TRIPA DE RASTRO.png",
+  "quajo": "VISCERA B- QUAJO.png",
+  "cuajo": "VISCERA B- QUAJO.png",
+  "teleco": "VISCERA B-TELECO.png",
+
+  "menudo canadian": "CAJAS-MENUDO CANADIAN.png",
+  "menudo excel": "CAJAS-MENUDO EXCEL.png",
+  "menudo nacional": "CAJAS-MENUDO NACIONAL.png",
+  "menudo washington": "CAJAS-MENUDO WASHINGTON.png",
+  "caja menudo canadian": "CAJAS-MENUDO CANADIAN.png",
+  "caja menudo excel": "CAJAS-MENUDO EXCEL.png",
+  "caja menudo national": "CAJAS-MENUDO NACIONAL.png",
+  "caja menudo nacional": "CAJAS-MENUDO NACIONAL.png",
+  "caja menudo washington": "CAJAS-MENUDO WASHINGTON.png",
+  "cajas menudo canadian": "CAJAS-MENUDO CANADIAN.png",
+  "cajas menudo excel": "CAJAS-MENUDO EXCEL.png",
+  "cajas menudo nacional": "CAJAS-MENUDO NACIONAL.png",
+  "cajas menudo washington": "CAJAS-MENUDO WASHINGTON.png",
+  "caja menudo visceras": "CAJAS-MENUDO VISCERAS.png",
+  "cajas menudo visceras": "CAJAS-MENUDO VISCERAS.png"
+};
+
 
 const DEFAULT_CLIENTS = [
   "8 De Junio",
@@ -2002,6 +2062,45 @@ function newTicket(){
   };
 }
 
+
+function normalizeImageKey(str){
+  return String(str || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase()
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function productImageUrl(product){
+  const key = normalizeImageKey(product.name);
+  const file = PRODUCT_IMAGE_FILES[key];
+
+  // Primero: imagen oficial por nombre desde GitHub Pages.
+  if(file){
+    return IMAGE_BASE_URL + encodeURIComponent(file);
+  }
+
+  // Segundo: si el producto trae una URL completa, úsala.
+  if(product.image && /^https?:\/\//i.test(product.image)){
+    return product.image;
+  }
+
+  // Tercero: si trae img/algo.png, conviértelo a URL completa.
+  if(product.image && product.image.startsWith("img/")){
+    return "https://marcianoper.github.io/vdc-pedidos/" + product.image;
+  }
+
+  return "";
+}
+
+function imageTag(product){
+  const src = productImageUrl(product);
+  if(!src) return productEmoji(product.category);
+
+  return `<img src="${src}" onerror="this.style.display='none';this.parentElement.textContent='${productEmoji(product.category)}'">`;
+}
+
 function productEmoji(cat){
   if(cat === "Cajas de Menudo") return "📦";
   if(cat === "Viscera Blanca") return "🥩";
@@ -2059,7 +2158,7 @@ function renderAdminProducts(){
     <tr>
       <td style="width:90px">
         <div class="product-img" style="width:58px;height:58px;border-radius:12px">
-          ${p.image ? `<img src="${p.image}" onerror="this.style.display='none';this.parentElement.textContent='${productEmoji(p.category)}'">` : productEmoji(p.category)}
+          ${imageTag(p)}
         </div>
       </td>
       <td><b>${p.name}</b></td>
@@ -2192,7 +2291,7 @@ function renderPosProducts(){
     return `
       <div class="product-card">
         <div class="product-img">
-          ${p.image ? `<img src="${p.image}" onerror="this.style.display='none';this.parentElement.textContent='${productEmoji(p.category)}'">` : productEmoji(p.category)}
+          ${imageTag(p)}
         </div>
 
         <div class="p-name">${p.name}</div>
@@ -3082,6 +3181,16 @@ function toggleSetting(key){
   settings[key] = !settings[key];
   save("vdc_pos_settings", settings);
   renderSettings();
+}
+
+function repairImages(){
+  // No borra tickets ni clientes.
+  // Solo vuelve a guardar productos y fuerza render con mapa oficial de imágenes.
+  products = products.map(p => ({...p, image: productImageUrl(p) || p.image || ""}));
+  save("vdc_pos_products", products);
+  renderAdminProducts();
+  renderPosProducts();
+  alert("Imágenes reparadas. Si alguna no aparece, revisa que el nombre del archivo exista exactamente en GitHub /img.");
 }
 
 function renderSettings(){
