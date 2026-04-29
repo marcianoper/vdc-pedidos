@@ -49,6 +49,31 @@
       grid-template-columns:260px 1fr;
       height:100vh;
       overflow:hidden;
+      transition:.2s ease;
+    }
+
+    .app.menu-collapsed{
+      grid-template-columns:92px 1fr;
+    }
+
+    .app.menu-collapsed .brand{
+      font-size:0;
+      padding-bottom:18px;
+    }
+
+    .app.menu-collapsed .brand::after{
+      content:"VDC";
+      font-size:22px;
+    }
+
+    .app.menu-collapsed .nav button{
+      justify-content:center;
+      padding:0;
+      font-size:0;
+    }
+
+    .app.menu-collapsed .nav button span.icon{
+      font-size:25px;
     }
 
     .sidebar{
@@ -202,35 +227,58 @@
     }
 
     .product-card{
-      border-radius:22px;
-      background:#fff;
-      border:1px solid #f0e1d4;
-      box-shadow:0 8px 22px rgba(185,28,28,.08);
+      border-radius:26px;
+      background:
+        linear-gradient(180deg,#ffffff 0%,#fffaf6 100%);
+      border:1px solid #efd8c9;
+      box-shadow:
+        0 14px 30px rgba(31,41,55,.08),
+        inset 0 1px 0 rgba(255,255,255,.9);
       padding:16px;
       display:flex;
       flex-direction:column;
       gap:12px;
-      min-height:370px;
+      min-height:390px;
+      position:relative;
+      overflow:hidden;
     }
 
-    /* CAMBIO IMÁGENES: más grandes, centradas y sin recortar */
+    .product-card::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:86px;
+      background:linear-gradient(90deg,rgba(185,28,28,.08),rgba(247,241,234,.45));
+      pointer-events:none;
+    }
+
+    .product-card:active{
+      transform:scale(.985);
+    }
+
+    /* IMÁGENES: formato más elegante, grande y tipo catálogo */
     .product-img{
-      height:160px;
-      background:#faf7f4;
-      border-radius:16px;
+      height:170px;
+      background:
+        radial-gradient(circle at center, #ffffff 0%, #fff7ef 60%, #f8eee4 100%);
+      border-radius:22px;
       display:flex;
       align-items:center;
       justify-content:center;
       overflow:hidden;
       font-size:42px;
+      position:relative;
+      z-index:1;
+      border:1px solid rgba(185,28,28,.08);
     }
 
     .product-img img{
-      width:90%;
-      height:90%;
+      width:92%;
+      height:92%;
       object-fit:contain;
-      transform:scale(1.2);
+      transform:scale(1.28);
       display:block;
+      filter:drop-shadow(0 10px 14px rgba(0,0,0,.14));
     }
 
     .p-name{
@@ -595,6 +643,39 @@
       outline:none;
     }
 
+    .quick-captures{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+      margin:14px 0 16px;
+    }
+
+    .quick-captures button{
+      height:62px;
+      border-radius:16px;
+      background:#fff7ed;
+      border:1px solid #fed7aa;
+      color:#9a3412;
+      font-size:22px;
+      font-weight:950;
+      box-shadow:0 8px 18px rgba(154,52,18,.08);
+    }
+
+    .quick-captures button:active{
+      transform:scale(.96);
+      background:#ffedd5;
+    }
+
+    .capture-help{
+      background:#f8fafc;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px 12px;
+      color:var(--muted);
+      font-weight:800;
+      margin-bottom:10px;
+    }
+
     .keypad{
       display:grid;
       grid-template-columns:repeat(3,1fr);
@@ -798,8 +879,8 @@
 
   <main class="main">
     <header class="topbar">
-      <!-- CAMBIO: las 3 rayas ya no ocultan la barra lateral; ahora mandan directo a POS -->
-      <button class="hamb" onclick="goPOS()">☰</button>
+      <!-- Las 3 rayas ahora colapsan/expanden el menú sin romper el diseño -->
+      <button class="hamb" onclick="toggleMenu()">☰</button>
       <div class="title" id="screenTitle">Productos</div>
     </header>
 
@@ -932,7 +1013,13 @@
     <div class="capture-product" id="capProductName">Producto</div>
     <div style="color:var(--muted);font-weight:800" id="capUnitLabel">Unidad</div>
 
-    <input class="big-number" id="capInput" inputmode="decimal" placeholder="0.000">
+    <div class="capture-help">
+      Toque una cantidad rápida y se captura automáticamente. Para otra cantidad, escríbala y presione Enter.
+    </div>
+
+    <div class="quick-captures" id="quickCaptures"></div>
+
+    <input class="big-number" id="capInput" inputmode="decimal" placeholder="Otra cantidad">
 
     <div class="keypad">
       <button onclick="keyNum('1')">1</button>
@@ -947,7 +1034,7 @@
       <button onclick="keyNum('0')">0</button>
       <button onclick="keyNum('.')">.</button>
       <button class="clearkey" onclick="clearCap()">⌫</button>
-      <button class="addkey" onclick="addCapture()">Agregar tanda</button>
+      <button class="addkey" onclick="addCapture()">Guardar cantidad</button>
       <button onclick="closeCaptureModal()">Cerrar</button>
     </div>
 
@@ -1136,7 +1223,12 @@ function initNav(){
   });
 }
 
-/* CAMBIO 3 RAYAS: manda a POS sin romper layout */
+/* Menú lateral: colapsa/expande sin romper el POS */
+function toggleMenu(){
+  document.querySelector(".app").classList.toggle("menu-collapsed");
+}
+
+/* Atajo opcional para mandar directo a POS si luego lo necesitas */
 function goPOS(){
   document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
   const posBtn = document.querySelector('.nav button[data-screen="pos"]');
@@ -1144,7 +1236,6 @@ function goPOS(){
 
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById("screen-pos").classList.add("active");
-
   document.getElementById("screenTitle").textContent = "POS";
   renderTicket();
 }
@@ -1323,6 +1414,7 @@ function openCapture(productId, existingIndex=null){
   document.getElementById("capUnitLabel").textContent = captureState.unit === "kg" ? "Captura en kilogramos" : "Captura en piezas";
   document.getElementById("capInput").value = "";
   document.getElementById("captureModal").classList.add("show");
+  renderQuickCaptureButtons();
   renderCapturesList();
 
   setTimeout(()=>document.getElementById("capInput").focus(),100);
@@ -1331,6 +1423,27 @@ function openCapture(productId, existingIndex=null){
 function closeCaptureModal(){
   document.getElementById("captureModal").classList.remove("show");
   captureState = null;
+}
+
+function renderQuickCaptureButtons(){
+  const wrap = document.getElementById("quickCaptures");
+  if(!wrap || !captureState) return;
+
+  const values = captureState.unit === "kg"
+    ? [1,2,3,5,10,15,20,25,30,40,50,100]
+    : [1,2,3,4,5,6,8,10,12,20,30,50];
+
+  wrap.innerHTML = values.map(v => `
+    <button onclick="quickAddCapture(${v})">${v}${captureState.unit}</button>
+  `).join("");
+}
+
+/* Captura automática: al tocar un número rápido se agrega la tanda sin botón extra */
+function quickAddCapture(value){
+  if(!captureState) return;
+  captureState.captures.push(Number(value));
+  document.getElementById("capInput").value = "";
+  renderCapturesList();
 }
 
 function keyNum(v){
@@ -1361,7 +1474,7 @@ function addCapture(){
   const val = Number(inp.value);
 
   if(!val || val <= 0){
-    alert("Captura una cantidad válida.");
+    alert("Captura una cantidad válida o toca una cantidad rápida.");
     return;
   }
 
