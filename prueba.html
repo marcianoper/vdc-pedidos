@@ -330,6 +330,23 @@
       font-weight:700;
     }
 
+    .cut-select{
+      height:48px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#fff;
+      padding:0 12px;
+      font-weight:850;
+      color:var(--ink);
+      outline:none;
+      width:100%;
+    }
+
+    .cut-select:focus{
+      border-color:var(--red);
+      box-shadow:0 0 0 3px rgba(185,28,28,.10);
+    }
+
     .unit-toggle{
       display:grid;
       grid-template-columns:1fr 1fr;
@@ -585,13 +602,65 @@
     .blue{background:#dbeafe;color:#1d4ed8}
 
     .config-box{
-      max-width:760px;
-      margin:40px auto;
+      max-width:1100px;
+      margin:24px auto;
       background:#fff;
       border-radius:22px;
       border:1px solid var(--line);
       padding:28px;
       box-shadow:var(--shadow);
+    }
+
+    .config-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:14px;
+      margin:18px 0 26px;
+    }
+
+    .config-card{
+      border:1px solid #ead9cc;
+      border-radius:18px;
+      background:#fffaf6;
+      padding:16px;
+      min-height:260px;
+    }
+
+    .config-card h3{
+      margin:0 0 10px;
+      color:var(--red);
+      font-size:18px;
+      font-weight:950;
+      text-transform:uppercase;
+    }
+
+    .config-card p{
+      margin:0 0 12px;
+      color:var(--ink);
+      font-size:14px;
+      font-weight:750;
+      line-height:1.35;
+    }
+
+    .config-card .sub{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:900;
+      margin:12px 0 6px;
+      text-transform:uppercase;
+    }
+
+    .config-card ul{
+      margin:0;
+      padding-left:18px;
+      color:var(--ink);
+      font-weight:750;
+      line-height:1.55;
+      font-size:14px;
+    }
+
+    @media(max-width:900px){
+      .config-grid{grid-template-columns:1fr}
     }
 
     .config-title{
@@ -1011,8 +1080,70 @@
 
       <div class="screen" id="screen-config">
         <div class="config-box">
-          <div class="config-title">Configuración</div>
-          <p style="color:var(--muted);margin-top:0">Administra las configuraciones del sistema.</p>
+          <div class="config-title">Configuración de productos y cortes</div>
+          <p style="color:var(--muted);margin-top:0">Reglas operativas para evitar capturas incorrectas en tablet.</p>
+
+          <div class="config-grid">
+            <div class="config-card">
+              <h3>Cajas de Menudo</h3>
+              <p>Estos productos solo tienen dos cortes.</p>
+              <div class="sub">Cortes permitidos</div>
+              <ul>
+                <li>Corte por mitad</li>
+                <li>Corte en cuatro</li>
+              </ul>
+              <div class="sub">Productos</div>
+              <ul>
+                <li>Menudo Nacional</li>
+                <li>Menudo Excel</li>
+                <li>Menudo Washington</li>
+                <li>Menudo Canadian</li>
+              </ul>
+            </div>
+
+            <div class="config-card">
+              <h3>Víscera Blanca</h3>
+              <p>En estos productos únicamente se pueden hacer cortes en patas y tripas.</p>
+              <div class="sub">Cortes permitidos</div>
+              <ul>
+                <li>Patas: corte en rodajas</li>
+                <li>Patas: corte en cruz</li>
+                <li>Tripa: sacada</li>
+              </ul>
+              <div class="sub">Productos</div>
+              <ul>
+                <li>Panza</li>
+                <li>Libro</li>
+                <li>Pata Morena</li>
+                <li>Pata Blanca</li>
+                <li>Tripa</li>
+                <li>Tripa de Rastro</li>
+                <li>Quajo</li>
+                <li>Teleco</li>
+              </ul>
+            </div>
+
+            <div class="config-card">
+              <h3>Víscera Roja</h3>
+              <p>En estos productos solamente se puede hacer corte en cabezas de res.</p>
+              <div class="sub">Cortes permitidos</div>
+              <ul>
+                <li>Cabeza: corte en cuatro</li>
+                <li>Cabeza: corte sin tapa</li>
+              </ul>
+              <div class="sub">Productos</div>
+              <ul>
+                <li>Cabeza</li>
+                <li>Cabeza de Rastro</li>
+                <li>Cabeza sin Lengua</li>
+                <li>Hígado</li>
+                <li>Corazón</li>
+                <li>Lengua</li>
+                <li>Bofe</li>
+                <li>Teleco</li>
+              </ul>
+            </div>
+          </div>
 
           <div class="config-row">
             <div>
@@ -1162,6 +1293,21 @@ const DEFAULT_PRODUCTS = [
 
 const DEFAULT_EMPLOYEES = ["Alison","Adriana Delgado","Ana Alvarado","Mónica","Operador"];
 
+const CATEGORY_RULES = {
+  "Cajas de Menudo":{
+    cuts:["Sin corte","Corte por mitad","Corte en cuatro"],
+    products:["Menudo Nacional","Menudo Excel","Menudo Washington","Menudo Canadian"]
+  },
+  "Viscera Blanca":{
+    cuts:["Sin corte","Pata: corte en rodajas","Pata: corte en cruz","Tripa: sacada"],
+    products:["Panza","Libro","Pata Morena","Pata Blanca","Tripa","Tripa de Rastro","Quajo","Teleco"]
+  },
+  "Viscera Roja":{
+    cuts:["Sin corte","Cabeza: corte en cuatro","Cabeza: corte sin tapa"],
+    products:["Cabeza","Cabeza de rastro","Cabeza sin lengua","Hígado","Corazón","Lengua","Bofe","Teleco"]
+  }
+};
+
 let products = load("vdc_pos_products", DEFAULT_PRODUCTS);
 let tickets = load("vdc_pos_tickets", []);
 let settings = load("vdc_pos_settings", {
@@ -1172,6 +1318,7 @@ let settings = load("vdc_pos_settings", {
 
 let currentCategory = "Todas";
 let selectedUnits = {};
+let selectedCuts = {};
 let currentTicket = newTicket();
 let captureState = null;
 let editProductId = null;
@@ -1384,6 +1531,30 @@ function setCategory(cat){
   renderPosProducts();
 }
 
+function getCutOptions(product){
+  const rules = CATEGORY_RULES[product.category];
+  if(!rules) return ["Sin corte"];
+
+  const n = product.name.toLowerCase();
+
+  if(product.category === "Viscera Blanca"){
+    if(n.includes("pata")) return ["Sin corte","Pata: corte en rodajas","Pata: corte en cruz"];
+    if(n.includes("tripa")) return ["Sin corte","Tripa: sacada"];
+    return ["Sin corte"];
+  }
+
+  if(product.category === "Viscera Roja"){
+    if(n.includes("cabeza")) return ["Sin corte","Cabeza: corte en cuatro","Cabeza: corte sin tapa"];
+    return ["Sin corte"];
+  }
+
+  return rules.cuts || ["Sin corte"];
+}
+
+function setCut(productId, cut){
+  selectedCuts[productId] = cut;
+}
+
 function renderPosProducts(){
   const grid = document.getElementById("posProductGrid");
   if(!grid) return;
@@ -1406,6 +1577,11 @@ function renderPosProducts(){
         </div>
         <div class="p-name">${p.name}</div>
         <div class="p-cat">${p.category}</div>
+
+        <div style="font-weight:900;color:var(--muted)">Corte:</div>
+        <select class="cut-select" onchange="setCut('${p.id}', this.value)">
+          ${getCutOptions(p).map(c=>`<option ${((selectedCuts[p.id] || "Sin corte")===c) ? "selected" : ""}>${c}</option>`).join("")}
+        </select>
 
         <div style="font-weight:900;color:var(--muted)">Vender por:</div>
         <div class="unit-toggle">
@@ -1436,6 +1612,7 @@ function openCapture(productId, existingIndex=null){
       productId:item.productId,
       name:item.name,
       unit:item.unit,
+      cut:item.cut || "Sin corte",
       captures:[...item.captures],
       editingIndex:existingIndex
     };
@@ -1444,6 +1621,7 @@ function openCapture(productId, existingIndex=null){
       productId:p.id,
       name:p.name,
       unit,
+      cut:selectedCuts[p.id] || "Sin corte",
       captures:[],
       editingIndex:null
     };
@@ -1453,7 +1631,9 @@ function openCapture(productId, existingIndex=null){
   tempNumber = "";
 
   document.getElementById("capProductName").textContent = captureState.name;
-  document.getElementById("capUnitLabel").textContent = captureState.unit === "kg" ? "Captura en kilogramos" : "Captura en piezas";
+  document.getElementById("capUnitLabel").textContent =
+    (captureState.unit === "kg" ? "Captura en kilogramos" : "Captura en piezas") +
+    (captureState.cut && captureState.cut !== "Sin corte" ? " · " + captureState.cut : "");
   document.getElementById("capInput").value = "";
   document.getElementById("captureModal").classList.add("show");
   renderQuickCaptureButtons();
@@ -1494,13 +1674,14 @@ function commitCaptureDirectToTicket(value){
     productId:captureState.productId,
     name:captureState.name,
     unit:captureState.unit,
+    cut:captureState.cut || "Sin corte",
     captures:[val],
     total:val
   };
 
   // Si ya existe el mismo producto con la misma unidad, agregamos la tanda ahí mismo.
   const existingIndex = currentTicket.items.findIndex(x =>
-    x.productId === item.productId && x.unit === item.unit
+    x.productId === item.productId && x.unit === item.unit && (x.cut || "Sin corte") === (item.cut || "Sin corte")
   );
 
   if(existingIndex >= 0){
@@ -1607,7 +1788,7 @@ function renderCapturesList(){
   if(!captureState || !wrap) return;
 
   const ticketItem = currentTicket.items.find(x =>
-    x.productId === captureState.productId && x.unit === captureState.unit
+    x.productId === captureState.productId && x.unit === captureState.unit && (x.cut || "Sin corte") === (captureState.cut || "Sin corte")
   );
 
   const captures = ticketItem ? ticketItem.captures : [];
@@ -1641,7 +1822,7 @@ function removeCapture(i){
   if(!captureState) return;
 
   const idx = currentTicket.items.findIndex(x =>
-    x.productId === captureState.productId && x.unit === captureState.unit
+    x.productId === captureState.productId && x.unit === captureState.unit && (x.cut || "Sin corte") === (captureState.cut || "Sin corte")
   );
 
   if(idx < 0) return;
@@ -1710,6 +1891,7 @@ function renderTicket(){
         <div class="titem-top">
           <div>
             <div class="titem-name">${it.name}</div>
+            ${it.cut && it.cut !== "Sin corte" ? `<div style="color:var(--muted);font-weight:800;font-size:14px">${it.cut}</div>` : ""}
             <div class="titem-total">${moneylessFormat(it.total,it.unit)}</div>
           </div>
           <div class="mini-actions">
@@ -1801,6 +1983,7 @@ function printTicket(ticket){
   const itemsHtml = ticket.items.map(it=>`
     <div class="item">
       <div class="big">${escapeHtml(it.name)}</div>
+      ${it.cut && it.cut !== "Sin corte" ? `<div>${escapeHtml(it.cut)}</div>` : ""}
       <div>${it.captures.map(c=>moneylessFormat(c,it.unit)).join(" y ")}</div>
       ${it.captures.length > 1 ? `<div class="bold">TOTAL: ${moneylessFormat(it.total,it.unit)}</div>` : ""}
     </div>
@@ -1893,7 +2076,7 @@ function renderTickets(){
         <td colspan="9" style="background:#fff7ed">
           ${t.items.map(it=>`
             <div style="margin:6px 0">
-              <b>${it.name}</b> — ${moneylessFormat(it.total,it.unit)}
+              <b>${it.name}</b>${it.cut && it.cut !== "Sin corte" ? ` · ${it.cut}` : ""} — ${moneylessFormat(it.total,it.unit)}
               <span style="color:var(--muted)">(${it.captures.map(c=>moneylessFormat(c,it.unit)).join(" + ")})</span>
             </div>
           `).join("")}
