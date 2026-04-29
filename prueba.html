@@ -433,6 +433,63 @@
       display:grid;
       gap:12px;
       margin-bottom:16px;
+      position:relative;
+    }
+
+    .client-box{
+      position:relative;
+    }
+
+    .client-suggestions{
+      position:absolute;
+      left:0;
+      right:0;
+      top:62px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:16px;
+      box-shadow:0 18px 45px rgba(0,0,0,.16);
+      overflow:auto;
+      max-height:330px;
+      z-index:30;
+      display:none;
+    }
+
+    .client-suggestions.show{
+      display:block;
+    }
+
+    .client-option{
+      min-height:54px;
+      padding:13px 16px;
+      border-bottom:1px solid #f1f5f9;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      font-weight:850;
+      color:var(--ink);
+      background:#fff;
+    }
+
+    .client-option:last-child{
+      border-bottom:none;
+    }
+
+    .client-option:active,
+    .client-option:hover{
+      background:#fff7ed;
+    }
+
+    .client-new{
+      color:var(--red);
+      font-weight:950;
+    }
+
+    .client-count{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:900;
     }
 
     .select,input.small-input{
@@ -1073,7 +1130,11 @@
 
             <div class="form-stack">
               <select class="select" id="employeeSelect" onchange="renderTicket()"></select>
-              <input class="small-input" id="clientInput" placeholder="Cliente (opcional)" oninput="renderTicket()">
+              <div class="client-box">
+                <input class="small-input" id="clientInput" placeholder="Cliente (opcional)" autocomplete="off"
+                  oninput="onClientInput()" onfocus="onClientInput()" onkeydown="clientKeydown(event)">
+                <div class="client-suggestions" id="clientSuggestions"></div>
+              </div>
             </div>
 
             <div class="ticket-items" id="ticketItems"></div>
@@ -1180,6 +1241,14 @@
                 <li>Teleco</li>
               </ul>
             </div>
+          </div>
+
+          <div class="config-row">
+            <div>
+              <b>Clientes cargados</b>
+              <div style="color:var(--muted)">Base importada del sistema anterior: autocompletado y alta automática de nuevos clientes.</div>
+            </div>
+            <button class="outlinebtn" onclick="alert('Clientes guardados: ' + clients.length)">Ver total</button>
           </div>
 
           <div class="config-row">
@@ -1327,6 +1396,437 @@ const DEFAULT_PRODUCTS = [
 
 const DEFAULT_EMPLOYEES = ["Alison","Adriana Delgado","Ana Alvarado","Mónica","Operador"];
 
+const DEFAULT_CLIENTS = [
+  "8 De Junio",
+  "Abasolo 1",
+  "Abasolo 2",
+  "Abasolo 3",
+  "Adriana Delgado",
+  "Aide",
+  "Alberto Cervantes",
+  "Ale",
+  "Ale Primero De Mayo",
+  "Ale Rangel",
+  "Alejandra",
+  "Alejandra Arredondo",
+  "Alejandro Clavel",
+  "Alejandro El Encanto",
+  "Alejandro Granado",
+  "Alejandro Huertas",
+  "Alejandro Medel",
+  "Alejandro Pradera",
+  "Alejandro San Miguelito",
+  "Alejandro San Roque",
+  "Alex",
+  "Alfredo",
+  "Alfredo Gonzalez Pueblo Nuevo",
+  "Amelia",
+  "Ana Alvarado",
+  "Anahi Alvarado",
+  "Anali Garnica",
+  "Andrea Sanchez",
+  "Andres",
+  "Angel Parra",
+  "Angeles Barrales",
+  "Angelina Martinez",
+  "Angelina Santoyo",
+  "Antonia",
+  "Antonia Herrera",
+  "Aracely Martinez",
+  "Aurora",
+  "Aurora Creadillas",
+  "Belen",
+  "Benito",
+  "Brisa Delgado",
+  "Camioneta Azul",
+  "Canales De Cueramaro",
+  "Carla Olvera",
+  "Carla Vargas",
+  "Carlos",
+  "Carlos Campos",
+  "Carmen Maestra",
+  "Carnicería El Triunfo",
+  "Carnicería Hermanos Diaz",
+  "Carnicería Rey Sol",
+  "Chayito",
+  "Dante",
+  "David",
+  "Dele",
+  "Diana Chavez",
+  "Dolores Alfaro",
+  "Don",
+  "Don Roque",
+  "Dulce",
+  "Edilberto Flores",
+  "Eduardo Montoya",
+  "Ejido Malvas Fernando",
+  "Elba Tripas",
+  "Elena San Cayetano",
+  "Elias Pueblo Nuevo",
+  "Elizabeth",
+  "Ellas Pueblo Nuevo",
+  "Elvira Chagoya",
+  "Erick Lopez",
+  "Ericka",
+  "Erika Tripas",
+  "Estefania Grana",
+  "Estela Lopez",
+  "Eva Gutierrez",
+  "Felipe Herrera",
+  "Fer Abraham Vallejo",
+  "Fer Al",
+  "Fer Aldama",
+  "Fer Almuerzos Tere",
+  "Fer Arandas",
+  "Fer Arcos 1 Y 2",
+  "Fer Avila Camacho",
+  "Fer Bella",
+  "Fer Bella 2",
+  "Fer Benito",
+  "Fer Calera",
+  "Fer Calera 3",
+  "Fer Carmelitas",
+  "Fer Carrizal",
+  "Fer Circuito Oceano",
+  "Fer Circuito Rosa",
+  "Fer División Del Norte",
+  "Fer Ejido Malvas",
+  "Fer Esfuerzo Obrero",
+  "Fer Gavilan",
+  "Fer Gomez Morin",
+  "Fer Iturbide",
+  "Fer Iturbide 1338",
+  "Fer Juan. Aldama",
+  "Fer Juarez",
+  "Fer Lagunilla",
+  "Fer Legaria 2",
+  "Fer Legaría",
+  "Fer Legaría 1",
+  "Fer Liebres",
+  "Fer Limón",
+  "Fer Lupe",
+  "Fer Malvas",
+  "Fer Manuel Acuña",
+  "Fer Naranjal 1",
+  "Fer Naranjal 2",
+  "Fer Naranjal 3",
+  "Fer Niños Héroes",
+  "Fer Nuevo Leon",
+  "Fer Patlan",
+  "Fer Patlan 2",
+  "Fer Playa Azul",
+  "Fer Pollo",
+  "Fer Progreso",
+  "Fer Pronasol",
+  "Fer Purisima",
+  "Fer Purisima 2",
+  "Fer Quinta Villas",
+  "Fer Resbalón",
+  "Fer Rinconada",
+  "Fer Romeral",
+  "Fer Salinas De Gortari",
+  "Fer San Angel",
+  "Fer San Irineo",
+  "Fer San Jose",
+  "Fer San Miguelito",
+  "Fer San Ramon",
+  "Fer Sarai",
+  "Fer Sobrino De Estefania",
+  "Fer Soledad",
+  "Fer Suegra De Rafa",
+  "Fer Tomelopez",
+  "Fer Tortilleria Juarez",
+  "Fer Ucopi",
+  "Fer Zapotla",
+  "Fernando Acambaro",
+  "Fernando Bella",
+  "Fernando Calera",
+  "Fernando Carrizal",
+  "Fernando Malvas",
+  "Fernando Mari",
+  "Fernando Mario",
+  "Fernando Moroleon",
+  "Fernando Niños Héroes",
+  "Fernando Nuevo Leon",
+  "Fernando Patlan",
+  "Fernando Purisima",
+  "Fernando Quinta Villas",
+  "Fernando Sauce",
+  "Fernando Ucopi",
+  "Fernando Xico",
+  "Fran",
+  "Gabriel Moreno",
+  "Gerardo",
+  "Gilberto",
+  "Gilberto Medina",
+  "Graciela Avila",
+  "Guera Marbran",
+  "Guero Esfuerzo Obrero",
+  "Gustavo",
+  "Güero Cueramaro",
+  "Güero Esfuerzo Obrero",
+  "Hacienda La Virgen",
+  "Hermana De San Roque",
+  "Hido",
+  "Hija Belen Penjamo",
+  "Hija De Chayito",
+  "Hijo De Valle",
+  "Hijo Sra Santa Elena",
+  "Hilario",
+  "Hilario Corona",
+  "Hugo",
+  "Ing Che",
+  "Ingeniero Che",
+  "Irma",
+  "Isidoro",
+  "Ivan Vera",
+  "Jair Vera",
+  "Jav",
+  "Javier",
+  "Jesús Muñoz",
+  "Joel",
+  "Jorge",
+  "Jorge Aguilera",
+  "Jorge Olmos",
+  "Jorge Parra",
+  "Jorge Parra Hija",
+  "Jose Erasmo",
+  "Jose Luis Arredondo",
+  "Jose Luis Bodega",
+  "Jose Manuel",
+  "Juan Carlos",
+  "Juan Ma",
+  "Juan Martinez",
+  "Juan Valdes",
+  "Juana Rocio",
+  "Juana Rocío",
+  "L3ty",
+  "Laura Martinez",
+  "Lety America",
+  "Lety Gela",
+  "Lindo Guanajuato",
+  "Lucino Rocha",
+  "Luis Jesus",
+  "Luisa",
+  "Lupe Santa Elena",
+  "Lupe Valle Del Sol",
+  "Lupita",
+  "Lupita Penjamo",
+  "Lupita Penjamo Hijo",
+  "Lupita Ramirez",
+  "Lupita Santibañez",
+  "Lupita Santos Degollado",
+  "Luz Herrera",
+  "Luz Maria",
+  "Maestra Carmen",
+  "Mamá De Alejandro",
+  "Mamá De Willy",
+  "Manuel",
+  "Maria Candelaria",
+  "Maria Cisneros",
+  "Maria De Lourdes",
+  "Maria Mercedes",
+  "Mario",
+  "Marisela Retana",
+  "Maritza",
+  "Martha Juarez",
+  "Martin Olmos",
+  "Martuchis",
+  "Mary",
+  "Meche Juventino",
+  "Menuderia Ana",
+  "Menuderia La Maria",
+  "Miguel",
+  "Miguel Angel Cortazar",
+  "Miguel Angel Garcia",
+  "Miguel Tabares",
+  "Miguel Tavares",
+  "Mony",
+  "Moto Escamilla",
+  "Moto Juan",
+  "Moto Juanito",
+  "Moto Verde",
+  "Nacho",
+  "Nancy Castro",
+  "Neto Abarrotes Jimmy",
+  "Neto Abasolo",
+  "Neto Adolfo Lopez Mateos",
+  "Neto Adriana",
+  "Neto America",
+  "Neto Americas",
+  "Neto Amilpa",
+  "Neto Antonia",
+  "Neto Apatzingan",
+  "Neto Av. Gto",
+  "Neto Avellano",
+  "Neto Benito",
+  "Neto Bimbo",
+  "Neto Birria Bolis",
+  "Neto Cacahuate",
+  "Neto Carnicería Estefany",
+  "Neto Chayito",
+  "Neto China Juarez",
+  "Neto China Verdura",
+  "Neto Clavel",
+  "Neto Cobos",
+  "Neto Copalillo",
+  "Neto Cosechadores",
+  "Neto Covarrubias",
+  "Neto División",
+  "Neto El Encanto",
+  "Neto Felipe",
+  "Neto Flores Magon",
+  "Neto Floresta",
+  "Neto Formosa",
+  "Neto Gaviota",
+  "Neto Granado",
+  "Neto Heras",
+  "Neto Hija De Chayito",
+  "Neto Lety America",
+  "Neto Leyes",
+  "Neto Maestra",
+  "Neto Mafia",
+  "Neto Mafia 2",
+  "Neto Mariela",
+  "Neto Matamoros",
+  "Neto Mimosa",
+  "Neto Morelos",
+  "Neto Narvarte",
+  "Neto Playa Azul",
+  "Neto Pradera",
+  "Neto Primero De Mayo",
+  "Neto Ramón",
+  "Neto Ramón Chagoya",
+  "Neto Reforma Agraria",
+  "Neto Rey Sol",
+  "Neto Río Nazas",
+  "Neto San Cayetano",
+  "Neto San Gabriel",
+  "Neto San Miguelito",
+  "Neto Segunda San Gabriel",
+  "Neto Solidaridad",
+  "Neto Suegra De Kike",
+  "Neto Taquicardia",
+  "Neto Tere",
+  "Neto Tomelopez",
+  "Neto Tomelopitos",
+  "Neto Valle Del Sol",
+  "Neto Vazquez",
+  "Neto Vicente Guerrero",
+  "Neto Yucon",
+  "Neto Zapotlan",
+  "Nogalia",
+  "Obdulia Padilla",
+  "Octavio",
+  "Oiga Juarez",
+  "Paco Alicia Morales",
+  "Paco Apatzingan",
+  "Paco Arcángel",
+  "Paco Bety",
+  "Paco Bola",
+  "Paco Candelaria",
+  "Paco Carrizal",
+  "Paco Cirilo",
+  "Paco Coecill9",
+  "Paco Coecillo",
+  "Paco Copalillo",
+  "Paco Coyoacan",
+  "Paco Dique",
+  "Paco Fuentes",
+  "Paco Guera",
+  "Paco Guero Valle Verde",
+  "Paco Guero Valleverde",
+  "Paco Hija De Carmelita",
+  "Paco Jardines",
+  "Paco Jardines 2",
+  "Paco Juarez",
+  "Paco Martin Olmos",
+  "Paco Naty Gto",
+  "Paco Nido",
+  "Paco Plan",
+  "Paco Plan Gto.",
+  "Paco Purisima Porton Beige",
+  "Paco Quesos",
+  "Paco Rancho Grande",
+  "Paco Rey Sol",
+  "Paco Rinconada",
+  "Paco Rinconada 2",
+  "Paco San Agustín 1",
+  "Paco San Agustín 2",
+  "Paco San Angel",
+  "Paco San Cristobal",
+  "Paco San Pedro",
+  "Paco Tecolutla",
+  "Paco Tellez",
+  "Paco Templo",
+  "Paco Valle Verde",
+  "Paco Valleverde",
+  "Paco Villa Real",
+  "Paco Villareal",
+  "Paco Virgen",
+  "Panchito Lopez",
+  "Paola Rosales",
+  "Patricia Gutierrez",
+  "Paul",
+  "Pedro Soto",
+  "Poco Virgen",
+  "Quiroz",
+  "Rafael Sobrino De Estefania",
+  "Ramon",
+  "Raul Escamilla",
+  "Rebeca",
+  "Rebeca Benito",
+  "Refugio Linares",
+  "Ricardo Reyes",
+  "Rocío Cordoba",
+  "Rocío Córdoba",
+  "Rocío Torralba",
+  "Rodrigo Rodriguez",
+  "Rosario Padilla",
+  "Rosy",
+  "Rosy Hija Belén Penjamo",
+  "San Irineo",
+  "Sandra Rodriguez",
+  "Santiago",
+  "Santiago Velazquez",
+  "Sebastian Galvan",
+  "Sergio Rodriguez",
+  "Silver Cuevas",
+  "Silvia",
+  "Silvia Garcia",
+  "Sobrino De Estefania",
+  "Sofia Martinez",
+  "Soledad Almanza",
+  "Sr De La Tina",
+  "Sr Valle",
+  "Sr. Abasolo",
+  "Sr. Canales De Cueramaro",
+  "Sr. Roque",
+  "Sra De La Calera",
+  "Sra De La Plan",
+  "Sra De Las Manzanas",
+  "Sra Del Pan",
+  "Sra Plan",
+  "Taquicardia",
+  "Tere Jaibo",
+  "Tere Rincon",
+  "Tere Rincón",
+  "Teresa Chacon",
+  "Tony",
+  "Toño Lole",
+  "Tío Jos",
+  "Tío Jose",
+  "Vero Gaytan",
+  "Vicky",
+  "Vicky 2",
+  "Victor",
+  "Villa Rosita",
+  "Vita",
+  "Yolanda Martinez",
+  "Zorayda",
+  "Ángeles Barrales"
+];
+
 const CATEGORY_RULES = {
   "Cajas de Menudo":{
     cuts:["Sin corte","Corte por mitad","Corte en cuatro"],
@@ -1344,6 +1844,7 @@ const CATEGORY_RULES = {
 
 let products = load("vdc_pos_products", DEFAULT_PRODUCTS);
 let tickets = load("vdc_pos_tickets", []);
+let clients = load("vdc_pos_clients", DEFAULT_CLIENTS);
 let settings = load("vdc_pos_settings", {
   autoPrint:true,
   localSave:true,
@@ -1361,6 +1862,7 @@ let autoAddTimer = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   initNav();
+  normalizeClientStore();
   renderEmployeeSelect();
   renderCategoryChips();
   renderAdminProducts();
@@ -1932,6 +2434,131 @@ function saveCaptureProduct(){
   renderTicket();
 }
 
+
+function normalizeText(str){
+  return String(str || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase()
+    .trim();
+}
+
+function cleanClientName(name){
+  return String(name || "").replace(/\s+/g," ").trim();
+}
+
+function normalizeClientStore(){
+  const map = new Map();
+  clients.forEach(c=>{
+    const clean = cleanClientName(c);
+    if(!clean) return;
+    const key = normalizeText(clean);
+    if(!map.has(key)) map.set(key, clean);
+  });
+  clients = Array.from(map.values()).sort((a,b)=>a.localeCompare(b,"es"));
+  save("vdc_pos_clients", clients);
+}
+
+function addClientIfMissing(name){
+  const clean = cleanClientName(name);
+  if(!clean || clean.toLowerCase() === "cliente general") return;
+
+  const exists = clients.some(c => normalizeText(c) === normalizeText(clean));
+  if(!exists){
+    clients.push(clean);
+    clients.sort((a,b)=>a.localeCompare(b,"es"));
+    save("vdc_pos_clients", clients);
+  }
+}
+
+function onClientInput(){
+  renderTicket();
+  renderClientSuggestions();
+}
+
+function renderClientSuggestions(){
+  const input = document.getElementById("clientInput");
+  const box = document.getElementById("clientSuggestions");
+  if(!input || !box) return;
+
+  const q = cleanClientName(input.value);
+  const nq = normalizeText(q);
+
+  let matches = [];
+
+  if(nq){
+    matches = clients
+      .filter(c => normalizeText(c).includes(nq))
+      .slice(0,12);
+  }else{
+    matches = clients.slice(0,12);
+  }
+
+  const exact = q && clients.some(c => normalizeText(c) === nq);
+
+  let html = "";
+
+  if(q && !exact){
+    html += `
+      <div class="client-option client-new" onclick="selectClient('${escapeAttr(q)}')">
+        <span>+ Crear cliente: ${escapeHtml(q)}</span>
+      </div>
+    `;
+  }
+
+  html += matches.map(c=>`
+    <div class="client-option" onclick="selectClient('${escapeAttr(c)}')">
+      <span>${escapeHtml(c)}</span>
+      <span class="client-count">Cliente</span>
+    </div>
+  `).join("");
+
+  box.innerHTML = html || `
+    <div class="client-option" style="color:var(--muted)">Sin resultados</div>
+  `;
+
+  box.classList.add("show");
+}
+
+function selectClient(name){
+  const clean = cleanClientName(name);
+  document.getElementById("clientInput").value = clean;
+  addClientIfMissing(clean);
+  hideClientSuggestions();
+  renderTicket();
+}
+
+function hideClientSuggestions(){
+  const box = document.getElementById("clientSuggestions");
+  if(box) box.classList.remove("show");
+}
+
+function clientKeydown(e){
+  if(e.key === "Enter"){
+    e.preventDefault();
+    const val = cleanClientName(e.target.value);
+    if(val) selectClient(val);
+    hideClientSuggestions();
+  }
+  if(e.key === "Escape"){
+    hideClientSuggestions();
+  }
+}
+
+function escapeAttr(str){
+  return String(str || "")
+    .replace(/&/g,"&amp;")
+    .replace(/'/g,"&#039;")
+    .replace(/"/g,"&quot;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
+}
+
+document.addEventListener("click",(e)=>{
+  const box = document.querySelector(".client-box");
+  if(box && !box.contains(e.target)) hideClientSuggestions();
+});
+
 function renderEmployeeSelect(){
   const sel = document.getElementById("employeeSelect");
   sel.innerHTML = `<option value="">Seleccionar empleado</option>` + DEFAULT_EMPLOYEES.map(e=>`<option>${e}</option>`).join("");
@@ -1982,6 +2609,7 @@ function cancelSale(){
   currentTicket = newTicket();
   document.getElementById("employeeSelect").value = "";
   document.getElementById("clientInput").value = "";
+  hideClientSuggestions();
   renderTicket();
 }
 
@@ -2002,6 +2630,8 @@ async function finishSale(){
     printed:false,
     created_at:new Date().toISOString()
   };
+
+  addClientIfMissing(ticket.client);
 
   if(settings.localSave){
     tickets.unshift(ticket);
@@ -2033,6 +2663,7 @@ async function finishSale(){
   currentTicket = newTicket();
   document.getElementById("employeeSelect").value = "";
   document.getElementById("clientInput").value = "";
+  hideClientSuggestions();
   renderTicket();
   renderTickets();
 }
