@@ -398,6 +398,69 @@
       font-weight:900;
     }
 
+    .inline-capture{
+      margin-top:auto;
+      display:grid;
+      gap:10px;
+      animation:popIn .12s ease-out;
+    }
+
+    @keyframes popIn{
+      from{opacity:.5;transform:translateY(4px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+
+    .inline-capture .cut-row{
+      margin:0;
+      padding:10px;
+      border-radius:16px;
+    }
+
+    .quick-actions{
+      display:grid;
+      grid-template-columns:56px 1fr 56px;
+      gap:10px;
+      align-items:center;
+    }
+
+    .quick-actions button{
+      height:56px;
+      border-radius:50%;
+      font-size:26px;
+      font-weight:950;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .quick-cancel{
+      background:#fff;
+      color:#111827;
+      border:1px solid var(--line);
+      box-shadow:0 8px 18px rgba(0,0,0,.06);
+    }
+
+    .quick-send{
+      background:var(--red);
+      color:#fff;
+      box-shadow:0 10px 20px rgba(185,28,28,.22);
+    }
+
+    .quick-qty{
+      height:56px;
+      border-radius:16px;
+      border:2px solid var(--red);
+      text-align:center;
+      font-weight:950;
+      font-size:20px;
+      outline:none;
+      min-width:0;
+    }
+
+    .quick-qty:focus{
+      box-shadow:0 0 0 4px rgba(185,28,28,.10);
+    }
+
     .ticket-side{
       background:#fff;
       border-radius:var(--r);
@@ -1068,7 +1131,7 @@
 <div class="app">
 
   <aside class="sidebar">
-    <div class="brand">Sistema Carnes Para Alison 30000 genial super</div>
+    <div class="brand">Sistema Carnes</div>
     <div class="nav">
       <button class="active" data-screen="productos"><span class="icon">▦</span> Productos</button>
       <button data-screen="pos"><span class="icon">▦</span> POS</button>
@@ -1872,6 +1935,8 @@ let settings = load("vdc_pos_settings", {
 let currentCategory = "Todas";
 let selectedUnits = {};
 let selectedCuts = {};
+let inlineProductId = null;
+let inlineQty = {};
 let currentTicket = newTicket();
 let captureState = null;
 let editProductId = null;
@@ -2139,7 +2204,9 @@ function renderPosProducts(){
           <button class="${unit==='pz'?'active':''}" onclick="setUnit('${p.id}','pz')">Pieza</button>
         </div>
 
-        <button class="add-btn" onclick="openCapture('${p.id}')">Agregar</button>
+        ${inlineProductId === p.id ? renderInlineCapture(p, unit) : `
+          <button class="add-btn" onclick="startInlineCapture('${p.id}')">Agregar</button>
+        `}
       </div>
     `;
   }).join("");
@@ -2147,6 +2214,106 @@ function renderPosProducts(){
 
 function setUnit(productId, unit){
   selectedUnits[productId] = unit;
+  renderPosProducts();
+}
+
+function startInlineCapture(productId){
+  inlineProductId = productId;
+  if(!inlineQty[productId]) inlineQty[productId] = "1";
+
+  const p = products.find(x=>x.id===productId);
+  if(p){
+    const cuts = getCutOptions(p);
+    if(!selectedCuts[productId]) selectedCuts[productId] = cuts.includes("Sin corte") ? "Sin corte" : (cuts[0] || "Sin corte");
+  }
+
+  renderPosProducts();
+
+  setTimeout(()=>{
+    const input = document.getElementById("quickQty-"+productId);
+    if(input){
+      input.focus();
+      input.select();
+    }
+  },50);
+}
+
+function cancelInlineCapture(){
+  inlineProductId = null;
+  renderPosProducts();
+}
+
+function setInlineQty(productId, value){
+  inlineQty[productId] = value;
+}
+
+function renderInlineCapture(p, unit){
+  const cuts = getCutOptions(p);
+  const hasCuts = cuts.length > 1;
+  const currentCut = selectedCuts[p.id] || "Sin corte";
+  const qty = inlineQty[p.id] || "1";
+
+  return `
+    <div class="inline-capture">
+      ${hasCuts ? `
+        <div class="cut-row">
+          <span>✂ Corte</span>
+          <select class="cut-select" onchange="setCut('${p.id}', this.value)">
+            ${cuts.map(c=>`<option ${currentCut===c ? "selected" : ""}>${c}</option>`).join("")}
+          </select>
+        </div>
+      ` : ""}
+
+      <div class="quick-actions">
+        <button class="quick-cancel" onclick="cancelInlineCapture()">×</button>
+        <input class="quick-qty" id="quickQty-${p.id}" inputmode="decimal"
+          value="${qty}"
+          oninput="setInlineQty('${p.id}', this.value)"
+          onkeydown="if(event.key==='Enter'){commitInlineCapture('${p.id}')}">
+        <button class="quick-send" onclick="commitInlineCapture('${p.id}')">→</button>
+      </div>
+    </div>
+  `;
+}
+
+function commitInlineCapture(productId){
+  const p = products.find(x=>x.id===productId);
+  if(!p) return;
+
+  const unit = selectedUnits[productId] || "kg";
+  const val = Number(inlineQty[productId] || document.getElementById("quickQty-"+productId)?.value || 0);
+
+  if(!val || val <= 0){
+    alert("Captura una cantidad válida.");
+    return;
+  }
+
+  const item = {
+    productId:p.id,
+    name:p.name,
+    unit,
+    cut:selectedCuts[p.id] || "Sin corte",
+    captures:[val],
+    total:val
+  };
+
+  const existingIndex = currentTicket.items.findIndex(x =>
+    x.productId === item.productId &&
+    x.unit === item.unit &&
+    (x.cut || "Sin corte") === (item.cut || "Sin corte")
+  );
+
+  if(existingIndex >= 0){
+    currentTicket.items[existingIndex].captures.push(val);
+    currentTicket.items[existingIndex].total =
+      currentTicket.items[existingIndex].captures.reduce((a,b)=>a+Number(b),0);
+  }else{
+    currentTicket.items.push(item);
+  }
+
+  inlineQty[productId] = "1";
+  inlineProductId = null;
+  renderTicket();
   renderPosProducts();
 }
 
@@ -2674,7 +2841,7 @@ function renderTicket(){
             <div class="titem-total">${moneylessFormat(it.total,it.unit)}</div>
           </div>
           <div class="mini-actions">
-            <button class="edit" onclick="openCapture('${it.productId}',${i})">✎</button>
+            <button class="edit" onclick="startInlineCapture('${it.productId}')">✎</button>
             <button class="del" onclick="removeTicketItem(${i})">×</button>
           </div>
         </div>
