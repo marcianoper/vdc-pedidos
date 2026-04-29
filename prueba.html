@@ -769,6 +769,15 @@
       outline:none;
     }
 
+    #capCutContainer{
+      margin:12px 0;
+    }
+
+    #capCutContainer .cut-row{
+      margin:0;
+      background:#fff7ed;
+    }
+
     .quick-captures{
       display:grid;
       grid-template-columns:repeat(4,1fr);
@@ -825,6 +834,14 @@
     .keypad .clearkey{
       background:#fee2e2;
       color:#b91c1c;
+    }
+
+    .keypad-clean{
+      grid-template-columns:repeat(3,1fr);
+    }
+
+    .keypad-clean button{
+      height:76px;
     }
 
     .modal-actions{
@@ -1197,19 +1214,21 @@
 
 <div class="modal-back" id="captureModal">
   <div class="modal">
-    <h2>Capturar producto</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <h2>Capturar producto</h2>
+      <button class="outlinebtn" onclick="closeCaptureModal()" style="height:44px;border-radius:14px">×</button>
+    </div>
     <div class="capture-product" id="capProductName">Producto</div>
     <div style="color:var(--muted);font-weight:800" id="capUnitLabel">Unidad</div>
+    <div id="capCutContainer"></div>
 
     <div class="capture-help">
-      Toque una cantidad rápida o marque números. Al dejar de tocar 0.8 segundos, se manda directo al ticket.
+      Marque la cantidad. Al dejar de tocar 0.8 segundos, se manda directo al ticket.
     </div>
 
-    <div class="quick-captures" id="quickCaptures"></div>
+    <input class="big-number" id="capInput" inputmode="decimal" placeholder="Marque cantidad">
 
-    <input class="big-number" id="capInput" inputmode="decimal" placeholder="Otra cantidad">
-
-    <div class="keypad">
+    <div class="keypad keypad-clean">
       <button onclick="keyNum('1')">1</button>
       <button onclick="keyNum('2')">2</button>
       <button onclick="keyNum('3')">3</button>
@@ -1222,16 +1241,11 @@
       <button onclick="keyNum('0')">0</button>
       <button onclick="keyNum('.')">.</button>
       <button class="clearkey" onclick="clearCap()">⌫</button>
-      <button class="addkey" onclick="addCapture()">Capturar ahora</button>
-      <button onclick="closeCaptureModal()">Cerrar</button>
     </div>
 
     <div class="captures-list" id="capturesList"></div>
 
-    <div class="modal-actions">
-      <button class="secondary" onclick="closeCaptureModal()">Cerrar</button>
-      <button class="primary" style="width:220px" onclick="closeCaptureModal()">Listo</button>
-    </div>
+    <div class="modal-actions hidden"></div>
   </div>
 </div>
 
@@ -1590,10 +1604,6 @@ function renderPosProducts(){
 
   grid.innerHTML = list.map(p=>{
     const unit = selectedUnits[p.id] || "kg";
-    const cuts = getCutOptions(p);
-    const hasCuts = cuts.length > 1;
-    if(!hasCuts) selectedCuts[p.id] = "Sin corte";
-
     return `
       <div class="product-card">
         <div class="product-img">
@@ -1602,15 +1612,6 @@ function renderPosProducts(){
 
         <div class="p-name">${p.name}</div>
         <div class="p-cat">${p.category}</div>
-
-        ${hasCuts ? `
-          <div class="cut-row">
-            <span>✂ Corte</span>
-            <select class="cut-select" onchange="setCut('${p.id}', this.value)">
-              ${cuts.map(c=>`<option ${((selectedCuts[p.id] || "Sin corte")===c) ? "selected" : ""}>${c}</option>`).join("")}
-            </select>
-          </div>
-        ` : ""}
 
         <div style="font-weight:900;color:var(--muted)">Vender por:</div>
         <div class="unit-toggle">
@@ -1627,6 +1628,39 @@ function renderPosProducts(){
 function setUnit(productId, unit){
   selectedUnits[productId] = unit;
   renderPosProducts();
+}
+
+function renderCaptureCutOptions(){
+  const wrap = document.getElementById("capCutContainer");
+  if(!wrap || !captureState) return;
+
+  const product = products.find(x=>x.id===captureState.productId);
+  if(!product){
+    wrap.innerHTML = "";
+    return;
+  }
+
+  const cuts = getCutOptions(product).filter(c => c !== "Sin corte");
+
+  if(!cuts.length){
+    captureState.cut = "Sin corte";
+    wrap.innerHTML = "";
+    return;
+  }
+
+  // Si no hay corte elegido, dejamos el primero como default para ahorrar toques.
+  if(!captureState.cut || captureState.cut === "Sin corte"){
+    captureState.cut = cuts[0];
+  }
+
+  wrap.innerHTML = `
+    <div class="cut-row">
+      <span>✂ Corte</span>
+      <select class="cut-select" onchange="captureState.cut=this.value; renderCapturesList();">
+        ${cuts.map(c=>`<option ${captureState.cut===c ? "selected" : ""}>${c}</option>`).join("")}
+      </select>
+    </div>
+  `;
 }
 
 function openCapture(productId, existingIndex=null){
@@ -1650,7 +1684,7 @@ function openCapture(productId, existingIndex=null){
       productId:p.id,
       name:p.name,
       unit,
-      cut:selectedCuts[p.id] || "Sin corte",
+      cut:"Sin corte",
       captures:[],
       editingIndex:null
     };
@@ -1661,11 +1695,10 @@ function openCapture(productId, existingIndex=null){
 
   document.getElementById("capProductName").textContent = captureState.name;
   document.getElementById("capUnitLabel").textContent =
-    (captureState.unit === "kg" ? "Captura en kilogramos" : "Captura en piezas") +
-    (captureState.cut && captureState.cut !== "Sin corte" ? " · " + captureState.cut : "");
+    captureState.unit === "kg" ? "Captura en kilogramos" : "Captura en piezas";
   document.getElementById("capInput").value = "";
   document.getElementById("captureModal").classList.add("show");
-  renderQuickCaptureButtons();
+  renderCaptureCutOptions();
   renderCapturesList();
 
   setTimeout(()=>document.getElementById("capInput").focus(),100);
