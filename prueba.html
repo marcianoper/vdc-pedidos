@@ -369,7 +369,7 @@
 
     .unit-toggle{
       display:grid;
-      grid-template-columns:1fr 1fr;
+      grid-template-columns:1fr 1fr 1fr;
       gap:8px;
     }
 
@@ -1322,6 +1322,14 @@
 
           <div class="config-row">
             <div>
+              <b>Actualizar productos base</b>
+              <div style="color:var(--muted)">Mezcla Bolsa, Mano blanca, Mano morena y próximos productos del sistema con los guardados en esta tablet.</div>
+            </div>
+            <button class="redbtn" onclick="forceBaseProducts()">Actualizar productos</button>
+          </div>
+
+          <div class="config-row">
+            <div>
               <b>Reparar imágenes en tablet</b>
               <div style="color:var(--muted)">Usa URLs directas de GitHub Pages y fuerza a la tablet a volver a pintar las imágenes.</div>
             </div>
@@ -1477,6 +1485,9 @@ const DEFAULT_PRODUCTS = [
   {id:uid(), name:"Menudo Excel", sku:"-", category:"Cajas de Menudo", active:true, image:"img/menudo-excel.png", created_at:"30/10/2025 04:01 PM", updated_at:"03/12/2025 03:14 PM"},
   {id:uid(), name:"Menudo Nacional", sku:"-", category:"Cajas de Menudo", active:true, image:"img/menudo-nacional.png", created_at:"30/10/2025 04:01 PM", updated_at:"03/12/2025 03:14 PM"},
   {id:uid(), name:"Menudo Washington", sku:"-", category:"Cajas de Menudo", active:true, image:"img/menudo-washington.png", created_at:"30/10/2025 04:01 PM", updated_at:"03/12/2025 03:14 PM"},
+  {id:uid(), name:"Bolsa", sku:"-", category:"Cajas de Menudo", active:true, image:"", created_at:nowStr(), updated_at:nowStr()},
+  {id:uid(), name:"Mano blanca", sku:"-", category:"Viscera Blanca", active:true, image:"", created_at:nowStr(), updated_at:nowStr()},
+  {id:uid(), name:"Mano morena", sku:"-", category:"Viscera Blanca", active:true, image:"", created_at:nowStr(), updated_at:nowStr()},
 ];
 
 const DEFAULT_EMPLOYEES = ["Alison","Adriana Delgado","Ana Alvarado","Mónica","Operador"];
@@ -1519,7 +1530,10 @@ const PRODUCT_IMAGE_FILES = {
   "quajo": ["VISCERA B- QUAJO.png","VISCERA B-QUAJO.png","VISCERA B QUAJO.png","quajo.png","cuajo.png"],
   "cuajo": ["VISCERA B- QUAJO.png","VISCERA B-QUAJO.png","VISCERA B QUAJO.png","quajo.png","cuajo.png"],
   "teleco": ["VISCERA B-TELECO.png","VISCERA B- TELECO.png","teleco.png"],
+  "mano blanca": ["VISCERA B-MANO BLANCA.png","VISCERA B- MANO BLANCA.png","mano-blanca.png","mano_blanca.png"],
+  "mano morena": ["VISCERA B-MANO MORENA.png","VISCERA B- MANO MORENA.png","mano-morena.png","mano_morena.png"],
 
+  "bolsa": ["CAJAS-BOLSA.png","CAJAS- BOLSA.png","bolsa.png"],
   "menudo canadian": ["CAJAS-MENUDO CANADIAN.png","CAJAS-MENUDO-CANADIAN.png","menudo-canadian.png"],
   "menudo excel": ["CAJAS-MENUDO EXCEL.png","CAJAS-MENUDO-EXCEL.png","menudo-excel.png"],
   "menudo nacional": ["CAJAS-MENUDO NACIONAL.png","CAJAS-MENUDO NACIONAL .png","CAJAS-MENUDO-NACIONAL.png","CAJAS-MENUDO NATIONAL.png","menudo-nacional.png"],
@@ -1967,11 +1981,11 @@ const DEFAULT_CLIENTS = [
 const CATEGORY_RULES = {
   "Cajas de Menudo":{
     cuts:["Sin corte","Corte por mitad","Corte en cuatro"],
-    products:["Menudo Nacional","Menudo Excel","Menudo Washington","Menudo Canadian"]
+    products:["Bolsa","Menudo Nacional","Menudo Excel","Menudo Washington","Menudo Canadian"]
   },
   "Viscera Blanca":{
     cuts:["Sin corte","Pata: corte en rodajas","Pata: corte en cruz","Tripa: sacada"],
-    products:["Panza","Libro","Pata Morena","Pata Blanca","Tripa","Tripa de Rastro","Quajo","Teleco"]
+    products:["Panza","Libro","Pata Morena","Pata Blanca","Mano Blanca","Mano Morena","Tripa","Tripa de Rastro","Quajo","Teleco"]
   },
   "Viscera Roja":{
     cuts:["Sin corte","Cabeza: corte en cuatro","Cabeza: corte sin tapa"],
@@ -1979,7 +1993,10 @@ const CATEGORY_RULES = {
   }
 };
 
-let products = load("vdc_pos_products", DEFAULT_PRODUCTS);
+// Productos sincronizados por código:
+ // Siempre mezcla los productos base del HTML + los guardados localmente.
+ // Así los nuevos productos aparecen en cualquier dispositivo al abrir la página actualizada.
+let products = mergeProductLists(DEFAULT_PRODUCTS, load("vdc_pos_products", []));
 let tickets = load("vdc_pos_tickets", []);
 
 // IMPORTANTE:
@@ -2043,8 +2060,41 @@ function save(key, value){
   localStorage.setItem(key, JSON.stringify(value));
 }
 
+function normalizeProductKey(name){
+  return String(name || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase()
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function mergeProductLists(baseList, savedList){
+  const map = new Map();
+
+  // Primero base del sistema, luego local: si ya editaste un producto en esa tablet, conserva tus cambios.
+  [...(baseList || []), ...(savedList || [])].forEach(p=>{
+    if(!p || !p.name) return;
+    const key = normalizeProductKey(p.name);
+    if(!key) return;
+    map.set(key, {
+      ...p,
+      id:p.id || uid(),
+      sku:p.sku || "-",
+      active:p.active !== false,
+      created_at:p.created_at || nowStr(),
+      updated_at:p.updated_at || nowStr()
+    });
+  });
+
+  const merged = Array.from(map.values()).sort((a,b)=>a.name.localeCompare(b.name,"es"));
+  localStorage.setItem("vdc_pos_products", JSON.stringify(merged));
+  return merged;
+}
+
 function moneylessFormat(n, unit){
   const val = Number(n || 0);
+  if(unit === "mxn") return `$${val.toFixed(2)} pesos`;
   if(unit === "pz") return `${val % 1 === 0 ? val.toFixed(0) : val.toFixed(2)} pz`;
   return `${val.toFixed(3).replace(/\.?0+$/,"")} kg`;
 }
@@ -2323,8 +2373,9 @@ function renderPosProducts(){
 
         <div style="font-weight:900;color:var(--muted)">Vender por:</div>
         <div class="unit-toggle">
-          <button class="${unit==='kg'?'active':''}" onclick="setUnit('${p.id}','kg')">Kilogramo</button>
+          <button class="${unit==='kg'?'active':''}" onclick="setUnit('${p.id}','kg')">Kilo</button>
           <button class="${unit==='pz'?'active':''}" onclick="setUnit('${p.id}','pz')">Pieza</button>
+          <button class="${unit==='mxn'?'active':''}" onclick="setUnit('${p.id}','mxn')">Pesos</button>
         </div>
 
         ${inlineProductId === p.id ? renderInlineCapture(p, unit) : `
@@ -3205,6 +3256,15 @@ function toggleSetting(key){
   settings[key] = !settings[key];
   save("vdc_pos_settings", settings);
   renderSettings();
+}
+
+function forceBaseProducts(){
+  const before = products.length;
+  products = mergeProductLists(DEFAULT_PRODUCTS, products);
+  renderAdminProducts();
+  renderCategoryChips();
+  renderPosProducts();
+  alert(`Productos actualizados.\nAntes: ${before}\nAhora: ${products.length}`);
 }
 
 function repairImages(){
