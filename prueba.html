@@ -1331,9 +1331,17 @@
           <div class="config-row">
             <div>
               <b>Reparar imágenes en tablet</b>
-              <div style="color:var(--muted)">Usa URLs directas de GitHub Pages y fuerza a la tablet a volver a pintar las imágenes.</div>
+              <div style="color:var(--muted)">Respeta primero la URL escrita en cada producto. Si falla, prueba imágenes oficiales por nombre.</div>
             </div>
             <button class="redbtn" onclick="repairImages()">Reparar imágenes</button>
+          </div>
+
+          <div class="config-row">
+            <div>
+              <b>Restablecer rutas de imágenes</b>
+              <div style="color:var(--muted)">Borra rutas viejas guardadas en la tablet y vuelve a usar el mapa oficial por nombre del producto.</div>
+            </div>
+            <button class="outlinebtn" onclick="resetProductImages()">Restablecer imágenes</button>
           </div>
 
           <div class="config-row">
@@ -1438,7 +1446,13 @@
 
       <div>
         <div class="label">URL de imagen opcional</div>
-        <input class="select" id="pmImage" placeholder="img/bofe.png">
+        <input class="select" id="pmImage" placeholder="img/bofe.png, nombre.png o URL completa" oninput="previewProductImage()">
+        <div style="display:flex;gap:12px;align-items:center;margin-top:10px">
+          <div id="pmImagePreview" style="width:86px;height:66px;border:1px solid var(--line);border-radius:14px;background:#fff7ed;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--muted);font-weight:900">Vista</div>
+          <div style="color:var(--muted);font-size:13px;line-height:1.35">
+            Recomendado: escribe <b>img/nombre.png</b> o pega la URL completa de GitHub/Supabase.
+          </div>
+        </div>
       </div>
 
       <div>
@@ -2129,19 +2143,48 @@ function imageUrlFromFile(file){
     .join("/");
 }
 
+function normalizeImagePath(path){
+  return String(path || "").trim().replace(/^\.?\//,"");
+}
+
+function imagePathToGithubUrl(path){
+  const clean = normalizeImagePath(path);
+
+  if(!clean) return "";
+
+  // Si ya es URL completa, se usa tal cual.
+  if(/^https?:\/\//i.test(clean)) return clean;
+
+  // Si empieza con img/, se convierte a URL completa de GitHub Pages.
+  if(clean.startsWith("img/")){
+    return "https://marcianoper.github.io/vdc-pedidos/" +
+      clean.split("/").map(part => encodeURIComponent(part)).join("/");
+  }
+
+  // Si solo pusiste el nombre del archivo, asumimos que vive en /img.
+  return IMAGE_BASE_URL + encodeURIComponent(clean);
+}
+
 function productImageCandidates(product){
+  const candidates = [];
+
+  /*
+    PRIORIDAD 1:
+    La imagen que tú pongas en "Editar producto" manda primero.
+    Así, si cambias una URL o archivo desde la compu/tablet, el sistema respeta ese cambio.
+  */
+  if(product.image){
+    const customUrl = imagePathToGithubUrl(product.image);
+    if(customUrl) candidates.push(customUrl);
+  }
+
+  /*
+    PRIORIDAD 2:
+    Si la imagen personalizada falla, probamos las imágenes oficiales por nombre.
+  */
   const key = normalizeImageKey(product.name);
   const files = PRODUCT_IMAGE_FILES[key] || [];
-
-  const candidates = files.map(imageUrlFromFile);
-
-  if(product.image && /^https?:\/\//i.test(product.image)){
-    candidates.push(product.image);
-  }
-
-  if(product.image && product.image.startsWith("img/")){
-    candidates.push("https://marcianoper.github.io/vdc-pedidos/" + product.image.split("/").map(encodeURIComponent).join("/"));
-  }
+  candidates.push(...files.map(imageUrlFromFile));
 
   return [...new Set(candidates)];
 }
@@ -2261,6 +2304,22 @@ function openProductModal(id=null){
   document.getElementById("pmActive").value = String(p?.active ?? true);
 
   document.getElementById("productModal").classList.add("show");
+  previewProductImage();
+}
+
+function previewProductImage(){
+  const box = document.getElementById("pmImagePreview");
+  const val = document.getElementById("pmImage")?.value?.trim() || "";
+
+  if(!box) return;
+
+  if(!val){
+    box.innerHTML = "Vista";
+    return;
+  }
+
+  const url = imagePathToGithubUrl(val);
+  box.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='No carga'">`;
 }
 
 function closeProductModal(){
@@ -3267,12 +3326,23 @@ function forceBaseProducts(){
   alert(`Productos actualizados.\nAntes: ${before}\nAhora: ${products.length}`);
 }
 
+function resetProductImages(){
+  if(!confirm("Esto borrará las rutas de imagen guardadas localmente en esta tablet. No borra productos ni tickets. ¿Continuar?")) return;
+
+  products = products.map(p => ({...p, image:""}));
+  save("vdc_pos_products", products);
+  renderAdminProducts();
+  renderPosProducts();
+
+  alert("Rutas locales borradas. Ahora se usará el mapa oficial por nombre del producto.");
+}
+
 function repairImages(){
   // No borra tickets ni clientes.
   // Fuerza a repintar usando la cadena de imágenes posibles.
   renderAdminProducts();
   renderPosProducts();
-  alert("Imágenes reparadas. El sistema ahora prueba varias rutas hasta encontrar la correcta.");
+  alert("Imágenes reparadas. Ahora se respeta primero la ruta que escribiste en cada producto y, si falla, se prueban rutas oficiales.");
 }
 
 function renderSettings(){
