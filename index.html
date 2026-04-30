@@ -369,7 +369,7 @@
 
     .unit-toggle{
       display:grid;
-      grid-template-columns:1fr 1fr;
+      grid-template-columns:1fr 1fr 1fr;
       gap:8px;
     }
 
@@ -1322,10 +1322,26 @@
 
           <div class="config-row">
             <div>
+              <b>Actualizar productos base</b>
+              <div style="color:var(--muted)">Mezcla Bolsa, Mano blanca, Mano morena y próximos productos del sistema con los guardados en esta tablet.</div>
+            </div>
+            <button class="redbtn" onclick="forceBaseProducts()">Actualizar productos</button>
+          </div>
+
+          <div class="config-row">
+            <div>
               <b>Reparar imágenes en tablet</b>
-              <div style="color:var(--muted)">Usa URLs directas de GitHub Pages y fuerza a la tablet a volver a pintar las imágenes.</div>
+              <div style="color:var(--muted)">Respeta primero la URL escrita en cada producto. Si falla, prueba imágenes oficiales por nombre.</div>
             </div>
             <button class="redbtn" onclick="repairImages()">Reparar imágenes</button>
+          </div>
+
+          <div class="config-row">
+            <div>
+              <b>Restablecer rutas de imágenes</b>
+              <div style="color:var(--muted)">Borra rutas viejas guardadas en la tablet y vuelve a usar el mapa oficial por nombre del producto.</div>
+            </div>
+            <button class="outlinebtn" onclick="resetProductImages()">Restablecer imágenes</button>
           </div>
 
           <div class="config-row">
@@ -1430,7 +1446,13 @@
 
       <div>
         <div class="label">URL de imagen opcional</div>
-        <input class="select" id="pmImage" placeholder="img/bofe.png">
+        <input class="select" id="pmImage" placeholder="img/bofe.png, nombre.png o URL completa" oninput="previewProductImage()">
+        <div style="display:flex;gap:12px;align-items:center;margin-top:10px">
+          <div id="pmImagePreview" style="width:86px;height:66px;border:1px solid var(--line);border-radius:14px;background:#fff7ed;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--muted);font-weight:900">Vista</div>
+          <div style="color:var(--muted);font-size:13px;line-height:1.35">
+            Recomendado: escribe <b>img/nombre.png</b> o pega la URL completa de GitHub/Supabase.
+          </div>
+        </div>
       </div>
 
       <div>
@@ -1477,6 +1499,9 @@ const DEFAULT_PRODUCTS = [
   {id:uid(), name:"Menudo Excel", sku:"-", category:"Cajas de Menudo", active:true, image:"img/menudo-excel.png", created_at:"30/10/2025 04:01 PM", updated_at:"03/12/2025 03:14 PM"},
   {id:uid(), name:"Menudo Nacional", sku:"-", category:"Cajas de Menudo", active:true, image:"img/menudo-nacional.png", created_at:"30/10/2025 04:01 PM", updated_at:"03/12/2025 03:14 PM"},
   {id:uid(), name:"Menudo Washington", sku:"-", category:"Cajas de Menudo", active:true, image:"img/menudo-washington.png", created_at:"30/10/2025 04:01 PM", updated_at:"03/12/2025 03:14 PM"},
+  {id:uid(), name:"Bolsa", sku:"-", category:"Cajas de Menudo", active:true, image:"", created_at:nowStr(), updated_at:nowStr()},
+  {id:uid(), name:"Mano blanca", sku:"-", category:"Viscera Blanca", active:true, image:"", created_at:nowStr(), updated_at:nowStr()},
+  {id:uid(), name:"Mano morena", sku:"-", category:"Viscera Blanca", active:true, image:"", created_at:nowStr(), updated_at:nowStr()},
 ];
 
 const DEFAULT_EMPLOYEES = ["Alison","Adriana Delgado","Ana Alvarado","Mónica","Operador"];
@@ -1519,7 +1544,10 @@ const PRODUCT_IMAGE_FILES = {
   "quajo": ["VISCERA B- QUAJO.png","VISCERA B-QUAJO.png","VISCERA B QUAJO.png","quajo.png","cuajo.png"],
   "cuajo": ["VISCERA B- QUAJO.png","VISCERA B-QUAJO.png","VISCERA B QUAJO.png","quajo.png","cuajo.png"],
   "teleco": ["VISCERA B-TELECO.png","VISCERA B- TELECO.png","teleco.png"],
+  "mano blanca": ["VISCERA B-MANO BLANCA.png","VISCERA B- MANO BLANCA.png","mano-blanca.png","mano_blanca.png"],
+  "mano morena": ["VISCERA B-MANO MORENA.png","VISCERA B- MANO MORENA.png","mano-morena.png","mano_morena.png"],
 
+  "bolsa": ["CAJAS-BOLSA.png","CAJAS- BOLSA.png","bolsa.png"],
   "menudo canadian": ["CAJAS-MENUDO CANADIAN.png","CAJAS-MENUDO-CANADIAN.png","menudo-canadian.png"],
   "menudo excel": ["CAJAS-MENUDO EXCEL.png","CAJAS-MENUDO-EXCEL.png","menudo-excel.png"],
   "menudo nacional": ["CAJAS-MENUDO NACIONAL.png","CAJAS-MENUDO NACIONAL .png","CAJAS-MENUDO-NACIONAL.png","CAJAS-MENUDO NATIONAL.png","menudo-nacional.png"],
@@ -1967,11 +1995,11 @@ const DEFAULT_CLIENTS = [
 const CATEGORY_RULES = {
   "Cajas de Menudo":{
     cuts:["Sin corte","Corte por mitad","Corte en cuatro"],
-    products:["Menudo Nacional","Menudo Excel","Menudo Washington","Menudo Canadian"]
+    products:["Bolsa","Menudo Nacional","Menudo Excel","Menudo Washington","Menudo Canadian"]
   },
   "Viscera Blanca":{
     cuts:["Sin corte","Pata: corte en rodajas","Pata: corte en cruz","Tripa: sacada"],
-    products:["Panza","Libro","Pata Morena","Pata Blanca","Tripa","Tripa de Rastro","Quajo","Teleco"]
+    products:["Panza","Libro","Pata Morena","Pata Blanca","Mano Blanca","Mano Morena","Tripa","Tripa de Rastro","Quajo","Teleco"]
   },
   "Viscera Roja":{
     cuts:["Sin corte","Cabeza: corte en cuatro","Cabeza: corte sin tapa"],
@@ -1979,7 +2007,10 @@ const CATEGORY_RULES = {
   }
 };
 
-let products = load("vdc_pos_products", DEFAULT_PRODUCTS);
+// Productos sincronizados por código:
+ // Siempre mezcla los productos base del HTML + los guardados localmente.
+ // Así los nuevos productos aparecen en cualquier dispositivo al abrir la página actualizada.
+let products = mergeProductLists(DEFAULT_PRODUCTS, load("vdc_pos_products", []));
 let tickets = load("vdc_pos_tickets", []);
 
 // IMPORTANTE:
@@ -2043,8 +2074,41 @@ function save(key, value){
   localStorage.setItem(key, JSON.stringify(value));
 }
 
+function normalizeProductKey(name){
+  return String(name || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase()
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function mergeProductLists(baseList, savedList){
+  const map = new Map();
+
+  // Primero base del sistema, luego local: si ya editaste un producto en esa tablet, conserva tus cambios.
+  [...(baseList || []), ...(savedList || [])].forEach(p=>{
+    if(!p || !p.name) return;
+    const key = normalizeProductKey(p.name);
+    if(!key) return;
+    map.set(key, {
+      ...p,
+      id:p.id || uid(),
+      sku:p.sku || "-",
+      active:p.active !== false,
+      created_at:p.created_at || nowStr(),
+      updated_at:p.updated_at || nowStr()
+    });
+  });
+
+  const merged = Array.from(map.values()).sort((a,b)=>a.name.localeCompare(b.name,"es"));
+  localStorage.setItem("vdc_pos_products", JSON.stringify(merged));
+  return merged;
+}
+
 function moneylessFormat(n, unit){
   const val = Number(n || 0);
+  if(unit === "mxn") return `$${val.toFixed(2)} pesos`;
   if(unit === "pz") return `${val % 1 === 0 ? val.toFixed(0) : val.toFixed(2)} pz`;
   return `${val.toFixed(3).replace(/\.?0+$/,"")} kg`;
 }
@@ -2079,19 +2143,48 @@ function imageUrlFromFile(file){
     .join("/");
 }
 
+function normalizeImagePath(path){
+  return String(path || "").trim().replace(/^\.?\//,"");
+}
+
+function imagePathToGithubUrl(path){
+  const clean = normalizeImagePath(path);
+
+  if(!clean) return "";
+
+  // Si ya es URL completa, se usa tal cual.
+  if(/^https?:\/\//i.test(clean)) return clean;
+
+  // Si empieza con img/, se convierte a URL completa de GitHub Pages.
+  if(clean.startsWith("img/")){
+    return "https://marcianoper.github.io/vdc-pedidos/" +
+      clean.split("/").map(part => encodeURIComponent(part)).join("/");
+  }
+
+  // Si solo pusiste el nombre del archivo, asumimos que vive en /img.
+  return IMAGE_BASE_URL + encodeURIComponent(clean);
+}
+
 function productImageCandidates(product){
+  const candidates = [];
+
+  /*
+    PRIORIDAD 1:
+    La imagen que tú pongas en "Editar producto" manda primero.
+    Así, si cambias una URL o archivo desde la compu/tablet, el sistema respeta ese cambio.
+  */
+  if(product.image){
+    const customUrl = imagePathToGithubUrl(product.image);
+    if(customUrl) candidates.push(customUrl);
+  }
+
+  /*
+    PRIORIDAD 2:
+    Si la imagen personalizada falla, probamos las imágenes oficiales por nombre.
+  */
   const key = normalizeImageKey(product.name);
   const files = PRODUCT_IMAGE_FILES[key] || [];
-
-  const candidates = files.map(imageUrlFromFile);
-
-  if(product.image && /^https?:\/\//i.test(product.image)){
-    candidates.push(product.image);
-  }
-
-  if(product.image && product.image.startsWith("img/")){
-    candidates.push("https://marcianoper.github.io/vdc-pedidos/" + product.image.split("/").map(encodeURIComponent).join("/"));
-  }
+  candidates.push(...files.map(imageUrlFromFile));
 
   return [...new Set(candidates)];
 }
@@ -2211,6 +2304,22 @@ function openProductModal(id=null){
   document.getElementById("pmActive").value = String(p?.active ?? true);
 
   document.getElementById("productModal").classList.add("show");
+  previewProductImage();
+}
+
+function previewProductImage(){
+  const box = document.getElementById("pmImagePreview");
+  const val = document.getElementById("pmImage")?.value?.trim() || "";
+
+  if(!box) return;
+
+  if(!val){
+    box.innerHTML = "Vista";
+    return;
+  }
+
+  const url = imagePathToGithubUrl(val);
+  box.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='No carga'">`;
 }
 
 function closeProductModal(){
@@ -2323,8 +2432,9 @@ function renderPosProducts(){
 
         <div style="font-weight:900;color:var(--muted)">Vender por:</div>
         <div class="unit-toggle">
-          <button class="${unit==='kg'?'active':''}" onclick="setUnit('${p.id}','kg')">Kilogramo</button>
+          <button class="${unit==='kg'?'active':''}" onclick="setUnit('${p.id}','kg')">Kilo</button>
           <button class="${unit==='pz'?'active':''}" onclick="setUnit('${p.id}','pz')">Pieza</button>
+          <button class="${unit==='mxn'?'active':''}" onclick="setUnit('${p.id}','mxn')">Pesos</button>
         </div>
 
         ${inlineProductId === p.id ? renderInlineCapture(p, unit) : `
@@ -3207,12 +3317,32 @@ function toggleSetting(key){
   renderSettings();
 }
 
+function forceBaseProducts(){
+  const before = products.length;
+  products = mergeProductLists(DEFAULT_PRODUCTS, products);
+  renderAdminProducts();
+  renderCategoryChips();
+  renderPosProducts();
+  alert(`Productos actualizados.\nAntes: ${before}\nAhora: ${products.length}`);
+}
+
+function resetProductImages(){
+  if(!confirm("Esto borrará las rutas de imagen guardadas localmente en esta tablet. No borra productos ni tickets. ¿Continuar?")) return;
+
+  products = products.map(p => ({...p, image:""}));
+  save("vdc_pos_products", products);
+  renderAdminProducts();
+  renderPosProducts();
+
+  alert("Rutas locales borradas. Ahora se usará el mapa oficial por nombre del producto.");
+}
+
 function repairImages(){
   // No borra tickets ni clientes.
   // Fuerza a repintar usando la cadena de imágenes posibles.
   renderAdminProducts();
   renderPosProducts();
-  alert("Imágenes reparadas. El sistema ahora prueba varias rutas hasta encontrar la correcta.");
+  alert("Imágenes reparadas. Ahora se respeta primero la ruta que escribiste en cada producto y, si falla, se prueban rutas oficiales.");
 }
 
 function renderSettings(){
