@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Pedido Cliente — VDC360°</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{--brand:#0a7a3b;--brand2:#0f9a52;--bg:#f6f7f8;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e5e7eb;--danger:#b91c1c;--shadow:0 18px 45px rgba(2,6,23,.10);--r:18px}
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#eef7f0 0%,var(--bg) 38%);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;color:var(--ink)}
+    header{background:var(--brand);color:#fff;padding:16px;text-align:center;position:sticky;top:0;z-index:10;box-shadow:0 8px 20px rgba(0,0,0,.12)}
+    header h1{font-size:19px;margin:0;font-weight:900}
+    header p{margin:5px 0 0;font-size:13px;opacity:.9}
+    main{max-width:720px;margin:0 auto;padding:16px;display:grid;gap:14px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
+    h2{font-size:17px;margin:0 0 10px}
+    label{display:block;font-size:13px;font-weight:800;margin-top:10px;color:#111827}
+    input,select,button{width:100%;padding:13px 12px;margin-top:6px;border:1px solid var(--line);border-radius:14px;background:#fff;font-size:16px}
+    button{cursor:pointer;font-weight:900}
+    .btn-primary{background:var(--brand);color:#fff;border:none}
+    .btn-ghost{background:#fff;color:#111827;border:1px solid var(--line)}
+    .btn-danger{background:#fff1f2;color:var(--danger);border:1px solid #fecdd3}
+    .row{display:grid;grid-template-columns:1fr 130px;gap:10px;align-items:end}
+    .muted{color:var(--muted);font-size:13px}
+    .pill{display:inline-block;padding:5px 10px;border-radius:999px;background:#eef7f0;color:#0a7a3b;font-size:12px;font-weight:900}
+    .topline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{padding:9px 4px;border-bottom:1px solid #eef0f2;text-align:left;font-size:14px}
+    th{color:#64748b;font-size:12px;text-transform:uppercase}
+    .right{text-align:right}
+    .totalBox{font-size:22px;font-weight:1000;color:var(--brand);text-align:right}
+    .empty{padding:18px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px;background:#f8fafc;margin-top:10px}
+    .ok{background:#eef7f0;border:1px solid #cde7d4;color:#0a7a3b;border-radius:14px;padding:10px;font-size:13px;margin-top:10px}
+    @media(max-width:560px){.row{grid-template-columns:1fr} main{padding:12px}.card{padding:14px}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Pedido en Bodega</h1>
+    <p>Carnes y Vísceras del Centro · Captura rápida</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="topline">
+        <h2 style="margin:0">🧾 Levantar pedido</h2>
+        <span class="pill" id="statusBox">Conectando...</span>
+      </div>
+
+      <label>Nombre del cliente</label>
+      <input id="clienteNombre" placeholder="Ej. Cliente bodega" value="Cliente bodega" />
+
+      <label>Clave de pedido</label>
+      <input id="sessionId" placeholder="Ej. bodega-hoy" />
+      <div class="muted">Esta clave debe ser igual a la que está abierta en la pantalla de la bodega.</div>
+
+      <div class="row">
+        <div>
+          <label>Producto</label>
+          <input id="producto" list="productosList" placeholder="Escribe producto" autocomplete="off" />
+          <datalist id="productosList"></datalist>
+        </div>
+        <div>
+          <label>Kilos</label>
+          <input id="kilos" type="number" min="0" step="0.01" placeholder="0.00" inputmode="decimal" />
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btnAgregar" type="button">Agregar producto</button>
+      <div class="ok">Cada producto que agregues aparece en tiempo real en la pantalla de la bodega.</div>
+    </section>
+
+    <section class="card">
+      <div class="topline">
+        <h2 style="margin:0">📦 Mi pedido</h2>
+        <span class="pill" id="itemsCount">0 productos</span>
+      </div>
+
+      <div id="emptyBox" class="empty">Aún no has agregado productos.</div>
+      <table id="tablaPedido" style="display:none">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th class="right">Kg</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="pedidoBody"></tbody>
+      </table>
+
+      <div class="totalBox" id="totalKg">0.00 kg</div>
+      <button class="btn-primary" id="btnEnviar" type="button">Enviar pedido</button>
+      <button class="btn-danger" id="btnLimpiar" type="button">Borrar mi pedido</button>
+    </section>
+  </main>
+
+  <script>
+    const SUPABASE_URL = "https://bjebybdqcqscouxlinfd.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmRxcXNjb3V4bGluZmQiLCJyb2xlIjoiYW5vbiJ9.placeholder";
+  </script>
+  <script>
+    /*
+      IMPORTANTE:
+      Si tu archivo queda con el ANON KEY placeholder, copia el mismo SUPABASE_ANON_KEY
+      que usas en notas-credito-con-pedido-live.html.
+    */
+    const SUPABASE_KEY_FINAL =
+      SUPABASE_ANON_KEY.includes("placeholder")
+        ? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqZWJ5YmRxY3FzY291eGxpbmZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzMjQ3MTksImV4cCI6MjA3MTkwMDcxOX0.mQgWtiYEyJTiF04pdcLv63SqPNrU1Iehws0vKqr82O0"
+        : SUPABASE_ANON_KEY;
+
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY_FINAL);
+    const PEDIDO_LIVE_TABLE = "pedidos_bodega_live";
+
+    const $ = s => document.querySelector(s);
+    const params = new URLSearchParams(location.search);
+    const sessionId = $('#sessionId');
+    const clienteNombre = $('#clienteNombre');
+    const producto = $('#producto');
+    const kilos = $('#kilos');
+    const statusBox = $('#statusBox');
+    const pedidoBody = $('#pedidoBody');
+    const tablaPedido = $('#tablaPedido');
+    const emptyBox = $('#emptyBox');
+    const totalKg = $('#totalKg');
+    const itemsCount = $('#itemsCount');
+    const productosList = $('#productosList');
+
+    let rows = [];
+    let liveChannel = null;
+
+    function to2(n){ return Number(n||0).toFixed(2); }
+    function productoBonito(s){
+      const limpio = String(s||'').trim().toLowerCase().replace(/\s+/g,' ');
+      return limpio ? limpio.charAt(0).toUpperCase() + limpio.slice(1) : '';
+    }
+    function currentSession(){ return String(sessionId.value || 'bodega-hoy').trim() || 'bodega-hoy'; }
+    function currentCliente(){ return String(clienteNombre.value || 'Cliente bodega').trim() || 'Cliente bodega'; }
+    function setStatus(txt, ok=true){
+      statusBox.textContent = txt;
+      statusBox.style.background = ok ? '#eef7f0' : '#fee2e2';
+      statusBox.style.color = ok ? '#0a7a3b' : '#b91c1c';
+    }
+
+    async function loadProductos(){
+      const { data, error } = await sb.from('productos').select('nombre,activo').order('nombre');
+      if(error){ console.warn(error); return; }
+      productosList.innerHTML = (data||[])
+        .filter(p => p.activo !== false)
+        .map(p => `<option value="${productoBonito(p.nombre)}"></option>`)
+        .join('');
+    }
+
+    async function loadPedido(){
+      const { data, error } = await sb
+        .from(PEDIDO_LIVE_TABLE)
+        .select('*')
+        .eq('session_id', currentSession())
+        .neq('estado','cancelado')
+        .order('created_at', {ascending:true});
+      if(error){ console.error(error); setStatus('Error conexión', false); return; }
+      rows = data || [];
+      render();
+      setStatus('Conectado', true);
+    }
+
+    function render(){
+      const visibles = rows.filter(r => r.estado !== 'cancelado');
+      if(!visibles.length){
+        tablaPedido.style.display = 'none';
+        emptyBox.style.display = 'block';
+      }else{
+        tablaPedido.style.display = 'table';
+        emptyBox.style.display = 'none';
+      }
+
+      pedidoBody.innerHTML = visibles.map(r=>`
+        <tr>
+          <td>${productoBonito(r.producto)}</td>
+          <td class="right"><b>${to2(r.kilos)}</b></td>
+          <td class="right"><button class="btn-ghost" style="padding:7px 9px;margin:0;font-size:13px" onclick="borrarItem('${r.id}')">Quitar</button></td>
+        </tr>
+      `).join('');
+
+      const total = visibles.reduce((a,r)=>a+Number(r.kilos||0),0);
+      totalKg.textContent = `${to2(total)} kg`;
+      itemsCount.textContent = `${visibles.length} producto${visibles.length===1?'':'s'}`;
+    }
+
+    async function agregar(){
+      const prod = productoBonito(producto.value);
+      const kg = Number(kilos.value || 0);
+      if(!prod) return alert('Escribe el producto.');
+      if(!Number.isFinite(kg) || kg <= 0) return alert('Escribe los kilos.');
+
+      const row = {
+        session_id: currentSession(),
+        cliente_nombre: currentCliente(),
+        producto: prod,
+        kilos: kg,
+        estado: 'escribiendo'
+      };
+
+      const { error } = await sb.from(PEDIDO_LIVE_TABLE).insert(row);
+      if(error){ console.error(error); return alert('No se pudo agregar. Revisa internet o permisos de Supabase.'); }
+      producto.value = '';
+      kilos.value = '';
+      producto.focus();
+      await loadPedido();
+    }
+
+    async function borrarItem(id){
+      const { error } = await sb.from(PEDIDO_LIVE_TABLE).update({estado:'cancelado'}).eq('id', id);
+      if(error){ console.error(error); return alert('No se pudo quitar.'); }
+      await loadPedido();
+    }
+    window.borrarItem = borrarItem;
+
+    async function enviarPedido(){
+      const ids = rows.filter(r=>r.estado !== 'cancelado' && r.estado !== 'pasado').map(r=>r.id);
+      if(!ids.length) return alert('Agrega productos primero.');
+      const { error } = await sb.from(PEDIDO_LIVE_TABLE).update({estado:'enviado'}).in('id', ids);
+      if(error){ console.error(error); return alert('No se pudo enviar.'); }
+      await loadPedido();
+      alert('✅ Pedido enviado a bodega.');
+    }
+
+    async function limpiar(){
+      if(!confirm('¿Borrar tu pedido actual?')) return;
+      const { error } = await sb.from(PEDIDO_LIVE_TABLE).update({estado:'cancelado'}).eq('session_id', currentSession()).neq('estado','pasado');
+      if(error){ console.error(error); return alert('No se pudo borrar.'); }
+      await loadPedido();
+    }
+
+    function subscribe(){
+      if(liveChannel){ sb.removeChannel(liveChannel); liveChannel = null; }
+      liveChannel = sb.channel(`cliente-pedido-${currentSession()}`)
+        .on('postgres_changes', {event:'*', schema:'public', table:PEDIDO_LIVE_TABLE, filter:`session_id=eq.${currentSession()}`}, loadPedido)
+        .subscribe();
+    }
+
+    $('#btnAgregar').addEventListener('click', agregar);
+    $('#btnEnviar').addEventListener('click', enviarPedido);
+    $('#btnLimpiar').addEventListener('click', limpiar);
+    [producto,kilos].forEach(el=>el.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); agregar(); }}));
+    sessionId.addEventListener('change', ()=>{ localStorage.setItem('pedidoSessionId', currentSession()); loadPedido(); subscribe(); });
+
+    window.addEventListener('load', async ()=>{
+      sessionId.value = params.get('session') || localStorage.getItem('pedidoSessionId') || 'bodega-hoy';
+      clienteNombre.value = localStorage.getItem('pedidoClienteNombre') || 'Cliente bodega';
+      sessionId.addEventListener('input', ()=>localStorage.setItem('pedidoSessionId', currentSession()));
+      clienteNombre.addEventListener('input', ()=>localStorage.setItem('pedidoClienteNombre', currentCliente()));
+      await loadProductos();
+      await loadPedido();
+      subscribe();
+      producto.focus();
+    });
+  </script>
+</body>
+</html>
