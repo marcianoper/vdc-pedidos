@@ -2386,22 +2386,30 @@ function getCutOptions(product){
   const rules = CATEGORY_RULES[product.category];
   if(!rules) return ["Sin corte"];
 
-  const n = product.name.toLowerCase();
+  const n = normalizeProductKey(product.name);
 
   if(product.category === "Viscera Blanca"){
-    if(n.includes("pata")) return ["Sin corte","Pata: corte en rodajas","Pata: corte en cruz"];
-    if(n.includes("tripa")) return ["Sin corte","Tripa: sacada"];
+    if(n.includes("pata") || n.includes("mano")){
+      return ["Sin corte","Pata: corte en rodajas","Pata: corte en cruz"];
+    }
+
+    if(n.includes("tripa")){
+      return ["Sin corte","Tripa: sacada"];
+    }
+
     return ["Sin corte"];
   }
 
   if(product.category === "Viscera Roja"){
-    if(n.includes("cabeza")) return ["Sin corte","Cabeza: corte en cuatro","Cabeza: corte sin tapa"];
+    if(n.includes("cabeza")){
+      return ["Sin corte","Cabeza: corte en cuatro","Cabeza: corte sin tapa"];
+    }
+
     return ["Sin corte"];
   }
 
   return rules.cuts || ["Sin corte"];
 }
-
 function setCut(productId, cut){
   selectedCuts[productId] = cut;
 }
