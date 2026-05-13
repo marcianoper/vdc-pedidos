@@ -2,12 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Etiqueta Menudo 200x80mm</title>
+<title>Etiqueta Menudo Premium 200x80mm</title>
 
 <style>
   @page{
     size: 200mm 80mm;
-    margin: 0;
+    margin:0;
   }
 
   *{
@@ -26,15 +26,18 @@
   .etiqueta{
     width:200mm;
     height:80mm;
-    padding:6mm 8mm;
-    border:2px solid #000;
+    border:3px solid #111;
     display:grid;
-    grid-template-columns: 58mm 1fr 55mm;
-    gap:6mm;
+    grid-template-columns: 55mm 1fr 60mm;
     overflow:hidden;
+    position:relative;
   }
 
-  .bloque-logo{
+  /* =======================
+     BLOQUE IZQUIERDO
+  ========================*/
+  .lado-logo{
+    padding:6mm 4mm;
     display:flex;
     flex-direction:column;
     justify-content:center;
@@ -43,76 +46,117 @@
   }
 
   .logo{
-    max-width:42mm;
-    max-height:24mm;
+    width:38mm;
+    max-height:22mm;
     object-fit:contain;
-    margin-bottom:3mm;
+    margin-bottom:4mm;
   }
 
   .empresa{
-    font-size:13px;
+    font-size:12px;
     font-weight:900;
     text-transform:uppercase;
-    line-height:1.15;
+    line-height:1.1;
+    letter-spacing:.3px;
   }
 
-  .producto{
+  /* =======================
+     CENTRO
+  ========================*/
+  .centro{
+    border-left:2px solid #111;
+    border-right:2px solid #111;
+    padding:5mm;
     display:flex;
     flex-direction:column;
     justify-content:center;
-    text-align:center;
-    border-left:2px solid #000;
-    border-right:2px solid #000;
-    padding:0 6mm;
+    align-items:center;
+    position:relative;
   }
 
-  .producto h1{
-    margin:0;
-    font-size:31px;
-    line-height:1;
-    font-weight:900;
-    letter-spacing:.5px;
-  }
-
-  .producto h2{
-    margin:4mm 0 0;
-    font-size:20px;
-    line-height:1;
-    font-weight:900;
-  }
-
-  .info{
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    font-size:15px;
-    line-height:1.45;
-    font-weight:700;
-  }
-
-  .peso{
-    font-size:24px;
-    font-weight:900;
+  .tipo{
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:1.5px;
     margin-bottom:2mm;
   }
 
-  .lote{
-    margin-top:1mm;
+  .titulo{
+    font-size:28px;
+    font-weight:900;
+    line-height:0.95;
+    text-align:center;
+    text-transform:uppercase;
   }
 
-  .congelado{
-    margin-top:2mm;
-    border-top:1px dashed #000;
-    padding-top:2mm;
+  .subtitulo{
+    margin-top:3mm;
+    font-size:18px;
+    font-weight:900;
+    line-height:1;
+    text-align:center;
+    text-transform:uppercase;
+  }
+
+  .codigo-barras{
+    margin-top:4mm;
+    width:100%;
+    height:12mm;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        #000 0px,
+        #000 2px,
+        #fff 2px,
+        #fff 4px,
+        #000 4px,
+        #000 5px,
+        #fff 5px,
+        #fff 7px
+      );
+  }
+
+  /* =======================
+     LADO DERECHO
+  ========================*/
+  .lado-info{
+    padding:5mm;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+  }
+
+  .peso{
+    font-size:22px;
+    font-weight:900;
+    margin-bottom:3mm;
+  }
+
+  .dato{
     font-size:13px;
+    margin-bottom:2mm;
+    line-height:1.2;
   }
 
-  .footer{
-    position:absolute;
-    left:8mm;
-    bottom:3mm;
-    font-size:10px;
+  .dato strong{
+    font-weight:900;
+  }
+
+  .frozen{
+    margin-top:4mm;
+    border-top:2px dashed #111;
+    padding-top:3mm;
+    font-size:12px;
+    font-weight:900;
+    text-transform:uppercase;
+  }
+
+  .mini{
+    margin-top:auto;
+    font-size:9px;
+    line-height:1.1;
     font-weight:700;
+    opacity:.75;
   }
 
   @media print{
@@ -123,8 +167,7 @@
     }
 
     .etiqueta{
-      page-break-after:avoid;
-      page-break-inside:avoid;
+      break-inside:avoid;
     }
   }
 </style>
@@ -133,27 +176,77 @@
 <body>
 
 <div class="etiqueta">
-  <div class="bloque-logo">
+
+  <!-- IZQUIERDA -->
+  <div class="lado-logo">
     <img src="TU_LOGO_AQUI.png" class="logo">
-    <div class="empresa">Carnes y Vísceras del Centro</div>
+
+    <div class="empresa">
+      Carnes y Vísceras del Centro
+    </div>
   </div>
 
-  <div class="producto">
-    <h1>CAJA DE MENUDO</h1>
-    <h2>VÍSCERAS DEL CENTRO</h2>
+  <!-- CENTRO -->
+  <div class="centro">
+
+    <div class="tipo">
+      PRODUCTO CONGELADO
+    </div>
+
+    <div class="titulo">
+      CAJA DE<br>
+      MENUDO
+    </div>
+
+    <div class="subtitulo">
+      VÍSCERAS DEL CENTRO
+    </div>
+
+    <div class="codigo-barras"></div>
+
   </div>
 
-  <div class="info">
+  <!-- DERECHA -->
+  <div class="lado-info">
+
     <div class="peso">20 KG</div>
-    <div><strong>FECHA:</strong> <span id="fecha"></span></div>
-    <div class="lote"><strong>LOTE:</strong> __________</div>
-    <div><strong>COD:</strong> VDC-MEN-001</div>
-    <div class="congelado"><strong>CONSERVAR CONGELADO</strong></div>
+
+    <div class="dato">
+      <strong>FECHA:</strong><br>
+      <span id="fecha"></span>
+    </div>
+
+    <div class="dato">
+      <strong>LOTE:</strong><br>
+      MEN-2026-001
+    </div>
+
+    <div class="dato">
+      <strong>CÓDIGO:</strong><br>
+      VDC-MEN-001
+    </div>
+
+    <div class="dato">
+      <strong>EMPACADO:</strong><br>
+      10:12 AM
+    </div>
+
+    <div class="frozen">
+      CONSERVAR CONGELADO
+    </div>
+
+    <div class="mini">
+      PRODUCTO DE RES<br>
+      USO ALIMENTICIO
+    </div>
+
   </div>
+
 </div>
 
 <script>
   const hoy = new Date();
+
   document.getElementById("fecha").textContent =
     hoy.toLocaleDateString("es-MX");
 </script>
