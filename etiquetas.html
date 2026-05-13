@@ -2,45 +2,34 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Etiqueta Menudo Brother QL-800</title>
+<title>Etiqueta Menudo 200x80mm</title>
 
-<!-- LIBRERIA CODIGO DE BARRAS -->
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
 <style>
-
   @page{
-    size:80mm 200mm;
-    margin:0;
+    size: 200mm 80mm;
+    margin: 0;
   }
 
-  *{
-    box-sizing:border-box;
-  }
+  *{ box-sizing:border-box; }
 
   html, body{
     margin:0;
     padding:0;
-    width:80mm;
-    height:200mm;
     background:#fff;
-    overflow:hidden;
     font-family:Arial, Helvetica, sans-serif;
   }
 
   body{
-    display:flex;
-    justify-content:center;
-    align-items:center;
+    width:200mm;
+    height:80mm;
+    overflow:hidden;
   }
 
   .etiqueta{
     width:200mm;
     height:80mm;
-
-    transform:rotate(90deg);
-    transform-origin:center center;
-
     border:3px solid #111;
     display:grid;
     grid-template-columns:55mm 1fr 60mm;
@@ -48,9 +37,6 @@
     background:#fff;
   }
 
-  /* =========================
-     IZQUIERDA
-  ==========================*/
   .lado-logo{
     padding:6mm 4mm;
     display:flex;
@@ -61,7 +47,7 @@
   }
 
   .logo{
-    width:45mm;
+    width:42mm;
     max-height:24mm;
     object-fit:contain;
     margin-bottom:4mm;
@@ -72,22 +58,16 @@
     font-weight:900;
     line-height:1.1;
     text-transform:uppercase;
-    letter-spacing:.5px;
   }
 
-  /* =========================
-     CENTRO
-  ==========================*/
   .centro{
     border-left:2px solid #111;
     border-right:2px solid #111;
-
+    padding:4mm 5mm;
     display:flex;
     flex-direction:column;
     justify-content:center;
     align-items:center;
-
-    padding:4mm 5mm;
     text-align:center;
   }
 
@@ -99,10 +79,9 @@
   }
 
   .titulo{
-    font-size:30px;
+    font-size:28px;
     line-height:.95;
     font-weight:900;
-    text-transform:uppercase;
   }
 
   .subtitulo{
@@ -110,34 +89,26 @@
     font-size:18px;
     font-weight:900;
     line-height:1;
-    text-transform:uppercase;
   }
 
-  /* =========================
-     CODIGO DE BARRAS
-  ==========================*/
   .barcode-wrap{
-    margin-top:5mm;
+    margin-top:4mm;
     width:100%;
   }
 
   #barcode{
     width:100%;
-    height:42px;
+    height:38px;
   }
 
   .barcode-text{
     margin-top:1mm;
-    font-size:9px;
+    font-size:8px;
     font-weight:700;
-    text-align:center;
     word-break:break-all;
     line-height:1.1;
   }
 
-  /* =========================
-     DERECHA
-  ==========================*/
   .lado-info{
     padding:5mm;
     display:flex;
@@ -153,22 +124,16 @@
 
   .dato{
     font-size:13px;
-    margin-bottom:2.5mm;
+    margin-bottom:2.3mm;
     line-height:1.2;
   }
 
-  .dato strong{
-    font-weight:900;
-  }
-
   .freeze{
-    margin-top:4mm;
+    margin-top:3mm;
     padding-top:3mm;
     border-top:2px dashed #111;
-
     font-size:12px;
     font-weight:900;
-    text-transform:uppercase;
   }
 
   .mini{
@@ -180,18 +145,17 @@
   }
 
   @media print{
-
     html, body{
-      width:80mm;
-      height:200mm;
+      width:200mm;
+      height:80mm;
+      overflow:hidden;
     }
 
-    body{
-      margin:0;
+    .etiqueta{
+      page-break-inside:avoid;
+      break-inside:avoid;
     }
-
   }
-
 </style>
 </head>
 
@@ -199,49 +163,33 @@
 
 <div class="etiqueta">
 
-  <!-- LOGO -->
   <div class="lado-logo">
-
-    <!-- CAMBIA logo.png -->
     <img src="logo.png" class="logo">
-
     <div class="empresa">
       Carnes y Vísceras del Centro
     </div>
-
   </div>
 
-  <!-- CENTRO -->
   <div class="centro">
-
-    <div class="tipo">
-      PRODUCTO CONGELADO
-    </div>
+    <div class="tipo">PRODUCTO CONGELADO</div>
 
     <div class="titulo">
-      CAJA DE<br>
-      MENUDO
+      CAJA DE<br>MENUDO
     </div>
 
     <div class="subtitulo">
       VÍSCERAS DEL CENTRO
     </div>
 
-    <!-- CODIGO DE BARRAS -->
     <div class="barcode-wrap">
-
       <svg id="barcode"></svg>
-
       <div class="barcode-text" id="barcodeText"></div>
-
     </div>
-
   </div>
 
-  <!-- INFO -->
   <div class="lado-info">
 
-    <div class="peso" id="peso">
+    <div class="peso">
       20 KG
     </div>
 
@@ -279,66 +227,34 @@
 </div>
 
 <script>
-
-  // =========================
-  // DATOS
-  // =========================
-
   const peso = "20KG";
+  const lote = "MEN-2026-001";
+  const codigo = "VDC-MEN-001";
 
   const hoy = new Date();
 
-  const fecha =
-    hoy.toLocaleDateString("es-MX");
+  const fecha = hoy.toLocaleDateString("es-MX");
 
-  const hora =
-    hoy.toLocaleTimeString("es-MX", {
-      hour:'2-digit',
-      minute:'2-digit'
-    });
-
-  const lote = "MEN-2026-001";
-
-  const codigo = "VDC-MEN-001";
-
-  // =========================
-  // MOSTRAR DATOS
-  // =========================
-
-  document.getElementById("fecha").textContent = fecha;
-
-  document.getElementById("hora").textContent = hora;
-
-  // =========================
-  // INFORMACION CODIGO BARRAS
-  // =========================
-
-  const barcodeData =
-    `P:${peso}|F:${fecha}|L:${lote}|C:${codigo}`;
-
-  document.getElementById("barcodeText").textContent =
-    barcodeData;
-
-  // =========================
-  // GENERAR CODIGO BARRAS
-  // =========================
-
-  JsBarcode("#barcode", barcodeData, {
-
-    format:"CODE128",
-
-    lineColor:"#000",
-
-    width:1.5,
-
-    height:40,
-
-    displayValue:false,
-
-    margin:0
-
+  const hora = hoy.toLocaleTimeString("es-MX", {
+    hour:"2-digit",
+    minute:"2-digit"
   });
 
+  document.getElementById("fecha").textContent = fecha;
+  document.getElementById("hora").textContent = hora;
+
+  const barcodeData = `P:${peso}|F:${fecha}|L:${lote}|C:${codigo}`;
+
+  document.getElementById("barcodeText").textContent = barcodeData;
+
+  JsBarcode("#barcode", barcodeData, {
+    format:"CODE128",
+    lineColor:"#000",
+    width:1.2,
+    height:36,
+    displayValue:false,
+    margin:0
+  });
 </script>
 
 </body>
