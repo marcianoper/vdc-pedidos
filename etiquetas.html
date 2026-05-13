@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <title>Etiqueta Menudo Brother QL-800</title>
 
+<!-- LIBRERIA CODIGO DE BARRAS -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+
 <style>
 
-  /* =========================
-     CONFIGURACION BROTHER
-  ==========================*/
   @page{
-    size: 80mm 200mm;
+    size:80mm 200mm;
     margin:0;
   }
 
@@ -34,9 +34,6 @@
     align-items:center;
   }
 
-  /* =========================
-     ETIQUETA
-  ==========================*/
   .etiqueta{
     width:200mm;
     height:80mm;
@@ -52,7 +49,7 @@
   }
 
   /* =========================
-     LADO IZQUIERDO
+     IZQUIERDA
   ==========================*/
   .lado-logo{
     padding:6mm 4mm;
@@ -116,23 +113,26 @@
     text-transform:uppercase;
   }
 
-  .codigo{
+  /* =========================
+     CODIGO DE BARRAS
+  ==========================*/
+  .barcode-wrap{
     margin-top:5mm;
     width:100%;
-    height:12mm;
+  }
 
-    background:
-      repeating-linear-gradient(
-        90deg,
-        #000 0px,
-        #000 2px,
-        #fff 2px,
-        #fff 4px,
-        #000 4px,
-        #000 5px,
-        #fff 5px,
-        #fff 7px
-      );
+  #barcode{
+    width:100%;
+    height:42px;
+  }
+
+  .barcode-text{
+    margin-top:1mm;
+    font-size:9px;
+    font-weight:700;
+    text-align:center;
+    word-break:break-all;
+    line-height:1.1;
   }
 
   /* =========================
@@ -179,9 +179,6 @@
     opacity:.75;
   }
 
-  /* =========================
-     IMPRESION
-  ==========================*/
   @media print{
 
     html, body{
@@ -191,11 +188,6 @@
 
     body{
       margin:0;
-    }
-
-    .etiqueta{
-      break-inside:avoid;
-      page-break-inside:avoid;
     }
 
   }
@@ -210,7 +202,7 @@
   <!-- LOGO -->
   <div class="lado-logo">
 
-    <!-- CAMBIA logo.png POR TU LOGO -->
+    <!-- CAMBIA logo.png -->
     <img src="logo.png" class="logo">
 
     <div class="empresa">
@@ -235,14 +227,21 @@
       VÍSCERAS DEL CENTRO
     </div>
 
-    <div class="codigo"></div>
+    <!-- CODIGO DE BARRAS -->
+    <div class="barcode-wrap">
+
+      <svg id="barcode"></svg>
+
+      <div class="barcode-text" id="barcodeText"></div>
+
+    </div>
 
   </div>
 
   <!-- INFO -->
   <div class="lado-info">
 
-    <div class="peso">
+    <div class="peso" id="peso">
       20 KG
     </div>
 
@@ -253,17 +252,17 @@
 
     <div class="dato">
       <strong>LOTE:</strong><br>
-      MEN-2026-001
+      <span id="lote">MEN-2026-001</span>
     </div>
 
     <div class="dato">
       <strong>CÓDIGO:</strong><br>
-      VDC-MEN-001
+      <span id="codigo">VDC-MEN-001</span>
     </div>
 
     <div class="dato">
       <strong>EMPACADO:</strong><br>
-      10:12 AM
+      <span id="hora"></span>
     </div>
 
     <div class="freeze">
@@ -281,10 +280,64 @@
 
 <script>
 
+  // =========================
+  // DATOS
+  // =========================
+
+  const peso = "20KG";
+
   const hoy = new Date();
 
-  document.getElementById("fecha").textContent =
+  const fecha =
     hoy.toLocaleDateString("es-MX");
+
+  const hora =
+    hoy.toLocaleTimeString("es-MX", {
+      hour:'2-digit',
+      minute:'2-digit'
+    });
+
+  const lote = "MEN-2026-001";
+
+  const codigo = "VDC-MEN-001";
+
+  // =========================
+  // MOSTRAR DATOS
+  // =========================
+
+  document.getElementById("fecha").textContent = fecha;
+
+  document.getElementById("hora").textContent = hora;
+
+  // =========================
+  // INFORMACION CODIGO BARRAS
+  // =========================
+
+  const barcodeData =
+    `P:${peso}|F:${fecha}|L:${lote}|C:${codigo}`;
+
+  document.getElementById("barcodeText").textContent =
+    barcodeData;
+
+  // =========================
+  // GENERAR CODIGO BARRAS
+  // =========================
+
+  JsBarcode("#barcode", barcodeData, {
+
+    format:"CODE128",
+
+    lineColor:"#000",
+
+    width:1.5,
+
+    height:40,
+
+    displayValue:false,
+
+    margin:0
+
+  });
 
 </script>
 
