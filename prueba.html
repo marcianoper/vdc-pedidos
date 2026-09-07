@@ -46,7 +46,7 @@
 
     .app{
       display:grid;
-      grid-template-columns:260px 1fr;
+      grid-template-columns:190px 1fr;
       height:100vh;
       overflow:hidden;
       transition:.2s ease;
@@ -79,7 +79,7 @@
     .sidebar{
       background:linear-gradient(180deg,var(--red),#7f1111);
       color:#fff;
-      padding:22px 18px;
+      padding:18px 10px;
       display:flex;
       flex-direction:column;
       gap:22px;
@@ -87,7 +87,7 @@
 
     .brand{
       font-weight:900;
-      font-size:24px;
+      font-size:20px;
       letter-spacing:.2px;
       padding:6px 8px 24px;
       border-bottom:1px solid rgba(255,255,255,.22);
@@ -96,16 +96,16 @@
     .nav{display:grid;gap:12px}
 
     .nav button{
-      height:64px;
+      height:54px;
       border-radius:16px;
       color:#fff;
       background:transparent;
       display:flex;
       align-items:center;
       gap:14px;
-      padding:0 18px;
+      padding:0 12px;
       font-weight:700;
-      font-size:17px;
+      font-size:15px;
       text-align:left;
     }
 
@@ -1102,14 +1102,14 @@
         position:absolute;
         left:0;
         top:0;
-        width:58mm;
+        width:80mm;
         padding:0;
         margin:0;
         color:#000;
         font-family:"Courier New",monospace;
       }
       .ticket-print{
-        width:58mm;
+        width:80mm;
         padding:4mm 3mm;
         font-size:12px;
         line-height:1.25;
@@ -1355,7 +1355,7 @@
           <div class="config-row">
             <div>
               <b>Imprimir automáticamente al finalizar</b>
-              <div style="color:var(--muted)">Al cerrar una venta, se abre la impresión térmica.</div>
+              <div style="color:var(--muted)">Al cerrar una venta, se envía al punto central de impresión mediante Supabase.</div>
             </div>
             <button class="switch on" id="autoPrintSwitch" onclick="toggleSetting('autoPrint')"></button>
           </div>
@@ -1474,6 +1474,74 @@
 <div id="printArea"></div>
 
 <script>
+
+    // ========= VDC 360 · COLA REMOTA DE IMPRESIÓN =========
+    // Completa estos 2 valores con el MISMO proyecto Supabase donde crearás vdc_print_jobs.
+    const VDC_PRINT_SUPABASE_URL = "PON_AQUI_TU_SUPABASE_URL";
+    const VDC_PRINT_SUPABASE_ANON_KEY = "PON_AQUI_TU_SUPABASE_ANON_KEY";
+    const VDC_PRINT_QUEUE_TABLE = "vdc_print_jobs";
+
+    function vdcPrintConfigReady(){
+      return /^https:\/\/.+\.supabase\.co$/i.test(VDC_PRINT_SUPABASE_URL)
+        && VDC_PRINT_SUPABASE_ANON_KEY
+        && !VDC_PRINT_SUPABASE_ANON_KEY.startsWith("PON_AQUI");
+    }
+
+    function vdcPrintJobKey(tipo, meta){
+      const raw = [
+        tipo,
+        meta?.folio || "",
+        meta?.source || "",
+        Date.now(),
+        Math.random().toString(36).slice(2)
+      ].join("|");
+      return "vdc-" + btoa(unescape(encodeURIComponent(raw)))
+        .replace(/[^a-zA-Z0-9]/g,"").slice(0,80);
+    }
+
+    async function vdcEncolarImpresion(tipo, html, meta = {}) {
+      if(!vdcPrintConfigReady()){
+        throw new Error(
+          "Falta configurar VDC_PRINT_SUPABASE_URL y VDC_PRINT_SUPABASE_ANON_KEY."
+        );
+      }
+
+      const job = {
+        tipo,
+        html,
+        meta,
+        estado: "pendiente",
+        intentos: 0,
+        max_intentos: 5,
+        job_key: vdcPrintJobKey(tipo, meta)
+      };
+
+      const res = await fetch(
+        `${VDC_PRINT_SUPABASE_URL}/rest/v1/${VDC_PRINT_QUEUE_TABLE}`,
+        {
+          method: "POST",
+          headers: {
+            "apikey": VDC_PRINT_SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${VDC_PRINT_SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json",
+            "Prefer": "return=representation"
+          },
+          body: JSON.stringify(job)
+        }
+      );
+
+      const data = await res.json().catch(() => null);
+      if(!res.ok){
+        throw new Error(
+          (data && (data.message || data.error || data.hint))
+            ? (data.message || data.error || data.hint)
+            : `No se pudo encolar la impresión (${res.status}).`
+        );
+      }
+
+      return Array.isArray(data) ? data[0] : data;
+    }
+
 const SUPABASE_URL = "";
 const SUPABASE_ANON_KEY = "";
 
@@ -1999,7 +2067,7 @@ const CATEGORY_RULES = {
   },
   "Viscera Blanca":{
     cuts:["Sin corte","Pata: corte en rodajas","Pata: corte en cruz","Tripa: sacada"],
-    products:["Panza","Libro","Pata Morena","Pata Blanca","Mano Blanca","Mano Morena","Tripa","Tripa de Rastro","Quajo","Teleco"]
+    products:["Panza","Libro","Pata Morena","Pata Blanca","Mano blanca","Mano morena","Tripa","Tripa de Rastro","Quajo","Teleco"]
   },
   "Viscera Roja":{
     cuts:["Sin corte","Cabeza: corte en cuatro","Cabeza: corte sin tapa"],
@@ -2386,22 +2454,30 @@ function getCutOptions(product){
   const rules = CATEGORY_RULES[product.category];
   if(!rules) return ["Sin corte"];
 
-  const n = product.name.toLowerCase();
+  const n = normalizeProductKey(product.name);
 
   if(product.category === "Viscera Blanca"){
-    if(n.includes("pata")) return ["Sin corte","Pata: corte en rodajas","Pata: corte en cruz"];
-    if(n.includes("tripa")) return ["Sin corte","Tripa: sacada"];
+    if(n.includes("pata") || n.includes("mano")){
+      return ["Sin corte","Pata: corte en rodajas","Pata: corte en cruz"];
+    }
+
+    if(n.includes("tripa")){
+      return ["Sin corte","Tripa: sacada"];
+    }
+
     return ["Sin corte"];
   }
 
   if(product.category === "Viscera Roja"){
-    if(n.includes("cabeza")) return ["Sin corte","Cabeza: corte en cuatro","Cabeza: corte sin tapa"];
+    if(n.includes("cabeza")){
+      return ["Sin corte","Cabeza: corte en cuatro","Cabeza: corte sin tapa"];
+    }
+
     return ["Sin corte"];
   }
 
   return rules.cuts || ["Sin corte"];
 }
-
 function setCut(productId, cut){
   selectedCuts[productId] = cut;
 }
@@ -3144,9 +3220,9 @@ async function finishSale(){
   }
 
   if(settings.autoPrint){
-    printTicket(ticket);
-    ticket.printed = true;
-    tickets = tickets.map(t=>t.id===ticket.id ? {...t, printed:true} : t);
+    const printQueued = await printTicket(ticket);
+    ticket.printed = !!printQueued;
+    tickets = tickets.map(t=>t.id===ticket.id ? {...t, printed:!!printQueued} : t);
     save("vdc_pos_tickets", tickets);
   }
 
@@ -3158,7 +3234,7 @@ async function finishSale(){
   renderTickets();
 }
 
-function printTicket(ticket){
+async function printTicket(ticket){
   const date = new Date(ticket.created_at);
   const fecha = date.toLocaleDateString("es-MX");
   const hora = date.toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"});
@@ -3172,7 +3248,7 @@ function printTicket(ticket){
     </div>
   `).join("");
 
-  document.getElementById("printArea").innerHTML = `
+  const ticketBody = `
     <div class="ticket-print">
       <div class="center bold">CARNES Y VÍSCERAS DEL CENTRO</div>
       <div class="center">Sistema de Gestión</div>
@@ -3203,7 +3279,34 @@ function printTicket(ticket){
     </div>
   `;
 
-  window.print();
+  document.getElementById("printArea").innerHTML = ticketBody;
+
+  const html = `<!doctype html>
+  <html lang="es"><head><meta charset="utf-8">
+  <style>
+    *{box-sizing:border-box}
+    @page{size:80mm auto;margin:0}
+    html,body{margin:0;padding:0;width:80mm;background:#fff;color:#000}
+    body{font-family:"Courier New",monospace}
+    .ticket-print{width:80mm;padding:4mm 4mm;font-size:13px;line-height:1.28}
+    .center{text-align:center}.bold{font-weight:900}
+    .line{border-top:1px dashed #000;margin:8px 0}
+    .big{font-size:16px;font-weight:900}.item{margin:9px 0}
+    .firma{margin-top:18px;text-align:center}
+  </style></head><body>${ticketBody}</body></html>`;
+
+  try{
+    await vdcEncolarImpresion("pedido", html, {
+      source:"pedidos",
+      folio:ticket.folio,
+      copies:1,
+      width_mm:80
+    });
+    return true;
+  }catch(err){
+    alert("El pedido se guardó, pero NO pudo enviarse a la cola de impresión.\n\n" + err.message);
+    return false;
+  }
 }
 
 function escapeHtml(str){
@@ -3273,13 +3376,15 @@ function toggleTicketDetail(id){
   document.getElementById("detail-"+id).classList.toggle("hidden");
 }
 
-function reprintTicket(id){
+async function reprintTicket(id){
   const t = tickets.find(x=>x.id===id);
   if(!t) return;
-  printTicket(t);
-  t.printed = true;
-  save("vdc_pos_tickets", tickets);
-  renderTickets();
+  const printQueued = await printTicket(t);
+  if(printQueued){
+    t.printed = true;
+    save("vdc_pos_tickets", tickets);
+    renderTickets();
+  }
 }
 
 function deleteTicket(id){
