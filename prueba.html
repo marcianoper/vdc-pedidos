@@ -3281,17 +3281,33 @@ async function printTicket(ticket){
 
   document.getElementById("printArea").innerHTML = ticketBody;
 
+  // Chrome no respeta de forma fiable "80mm auto" al crear PDF.
+  // Calculamos una altura física suficiente para el contenido para evitar
+  // tickets kilométricos y texto diminuto al pasar por el driver térmico.
+  const lineCount = ticket.items.reduce((n,it) => n + 3 + Math.max(1, (it.captures || []).length), 0);
+  const TICKET_H_MM = Math.max(90, Math.min(260, 62 + lineCount * 5 + (settings.signature ? 25 : 0)));
+
   const html = `<!doctype html>
   <html lang="es"><head><meta charset="utf-8">
   <style>
     *{box-sizing:border-box}
-    @page{size:80mm auto;margin:0}
-    html,body{margin:0;padding:0;width:80mm;background:#fff;color:#000}
+    @page{size:80mm ${TICKET_H_MM}mm;margin:0}
+    html,body{
+      margin:0;padding:0;
+      width:80mm;height:${TICKET_H_MM}mm;
+      background:#fff;color:#000;
+      overflow:hidden;
+    }
     body{font-family:"Courier New",monospace}
-    .ticket-print{width:80mm;padding:4mm 4mm;font-size:13px;line-height:1.28}
+    .ticket-print{
+      width:80mm;
+      padding:3mm 4mm 4mm;
+      font-size:14px;
+      line-height:1.30;
+    }
     .center{text-align:center}.bold{font-weight:900}
     .line{border-top:1px dashed #000;margin:8px 0}
-    .big{font-size:16px;font-weight:900}.item{margin:9px 0}
+    .big{font-size:17px;font-weight:900}.item{margin:9px 0}
     .firma{margin-top:18px;text-align:center}
   </style></head><body>${ticketBody}</body></html>`;
 
