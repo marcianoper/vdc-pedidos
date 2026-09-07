@@ -1113,11 +1113,16 @@
         padding:4mm 3mm;
         font-size:15px;
         line-height:1.28;
+        font-weight:700;
+        color:#000;
       }
       .ticket-print .center{text-align:center}
       .ticket-print .bold{font-weight:900}
       .ticket-print .line{border-top:1px dashed #000;margin:8px 0}
-      .ticket-print .big{font-size:15px;font-weight:900}
+      .ticket-print .big{font-size:18px;font-weight:900}
+      .ticket-print .meta-row,.ticket-print .meta-value{font-weight:900}
+      .ticket-print .peso{font-size:17px;font-weight:900}
+      .ticket-print .footer-strong{font-weight:900}
       .ticket-print .item{margin:8px 0}
       .ticket-print .firma{
         margin-top:18px;
@@ -3243,7 +3248,7 @@ async function printTicket(ticket){
     <div class="item">
       <div class="big">${escapeHtml(it.name)}</div>
       ${it.cut && it.cut !== "Sin corte" ? `<div>${escapeHtml(it.cut)}</div>` : ""}
-      <div>${it.captures.map(c=>moneylessFormat(c,it.unit)).join(" y ")}</div>
+      <div class="peso">${it.captures.map(c=>moneylessFormat(c,it.unit)).join(" y ")}</div>
       ${it.captures.length > 1 ? `<div class="bold">TOTAL: ${moneylessFormat(it.total,it.unit)}</div>` : ""}
     </div>
   `).join("");
@@ -3254,10 +3259,10 @@ async function printTicket(ticket){
       <div class="center">Sistema de Gestión</div>
       <div class="line"></div>
 
-      <div><span class="bold">Ticket:</span> #${String(ticket.folio).padStart(6,"0")}</div>
-      <div><span class="bold">Fecha:</span> ${fecha}, ${hora}</div>
-      <div><span class="bold">Cajero:</span> ${escapeHtml(ticket.employee)}</div>
-      <div><span class="bold">Cliente:</span> ${escapeHtml(ticket.client || "Cliente general")}</div>
+      <div class="meta-row"><span class="bold">Ticket:</span> <span class="meta-value">#${String(ticket.folio).padStart(6,"0")}</span></div>
+      <div class="meta-row"><span class="bold">Fecha:</span> <span class="meta-value">${fecha}, ${hora}</span></div>
+      <div class="meta-row"><span class="bold">Cajero:</span> <span class="meta-value">${escapeHtml(ticket.employee)}</span></div>
+      <div class="meta-row"><span class="bold">Cliente:</span> <span class="meta-value">${escapeHtml(ticket.client || "Cliente general")}</span></div>
 
       <div class="line"></div>
       <div class="big">PRODUCTO</div>
@@ -3266,8 +3271,8 @@ async function printTicket(ticket){
       ${itemsHtml}
 
       <div class="line"></div>
-      <div class="center">¡Gracias por su compra!</div>
-      <div class="center">Vuelva pronto</div>
+      <div class="center footer-strong">¡Gracias por su compra!</div>
+      <div class="center footer-strong">Vuelva pronto</div>
 
       ${settings.signature ? `
         <div class="firma">
@@ -3302,13 +3307,23 @@ async function printTicket(ticket){
     .ticket-print{
       width:80mm;
       padding:3mm 4mm 4mm;
-      font-size:14px;
-      line-height:1.30;
+      font-size:15px;
+      line-height:1.28;
+      font-weight:700;
+      color:#000;
+      -webkit-print-color-adjust:exact;
+      print-color-adjust:exact;
+      text-rendering:geometricPrecision;
     }
-    .center{text-align:center}.bold{font-weight:900}
+    .center{text-align:center}
+    .bold{font-weight:900}
+    .meta-row{font-weight:900;margin:1px 0}
+    .meta-value{font-weight:900}
+    .peso{font-size:17px;font-weight:900;letter-spacing:.1px}
+    .footer-strong{font-weight:900;font-size:15px}
     .line{border-top:1px dashed #000;margin:8px 0}
-    .big{font-size:17px;font-weight:900}.item{margin:9px 0}
-    .firma{margin-top:18px;text-align:center}
+    .big{font-size:18px;font-weight:900}.item{margin:9px 0}
+    .firma{margin-top:18px;text-align:center;font-weight:900}
   </style></head><body>${ticketBody}</body></html>`;
 
   try{
