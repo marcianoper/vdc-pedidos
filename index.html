@@ -1247,9 +1247,10 @@
           <div class="config-grid">
             <div class="config-card">
               <h3>Cajas de Menudo</h3>
-              <p>Estos productos solo tienen dos cortes.</p>
+              <p>Todas las cajas pueden ir enteras o cortadas.</p>
               <div class="sub">Cortes permitidos</div>
               <ul>
+                <li>Enteras</li>
                 <li>Corte por mitad</li>
                 <li>Corte en cuatro</li>
               </ul>
@@ -1267,6 +1268,9 @@
               <p>En estos productos únicamente se pueden hacer cortes en patas y tripas.</p>
               <div class="sub">Cortes permitidos</div>
               <ul>
+                <li>Patas: enteras</li>
+                <li>Patas: quebradas</li>
+                <li>Patas: a lo largo</li>
                 <li>Patas: corte en rodajas</li>
                 <li>Patas: corte en cruz</li>
                 <li>Tripa: sacada</li>
@@ -1994,11 +1998,11 @@ const DEFAULT_CLIENTS = [
 
 const CATEGORY_RULES = {
   "Cajas de Menudo":{
-    cuts:["Sin corte","Corte por mitad","Corte en cuatro"],
+    cuts:["Sin corte","Enteras","Corte por mitad","Corte en cuatro"],
     products:["Bolsa","Menudo Nacional","Menudo Excel","Menudo Washington","Menudo Canadian"]
   },
   "Viscera Blanca":{
-    cuts:["Sin corte","Pata: corte en rodajas","Pata: corte en cruz","Tripa: sacada"],
+    cuts:["Sin corte","Pata: enteras","Pata: quebradas","Pata: a lo largo","Pata: corte en rodajas","Pata: corte en cruz","Tripa: sacada"],
     products:["Panza","Libro","Pata Morena","Pata Blanca","Mano blanca","Mano morena","Tripa","Tripa de Rastro","Quajo","Teleco"]
   },
   "Viscera Roja":{
@@ -2390,7 +2394,7 @@ function getCutOptions(product){
 
   if(product.category === "Viscera Blanca"){
     if(n.includes("pata") || n.includes("mano")){
-      return ["Sin corte","Pata: corte en rodajas","Pata: corte en cruz"];
+      return ["Sin corte","Pata: enteras","Pata: quebradas","Pata: a lo largo","Pata: corte en rodajas","Pata: corte en cruz"];
     }
 
     if(n.includes("tripa")){
