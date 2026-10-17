@@ -1257,7 +1257,10 @@
               <ul>
                 <li>Enteras</li>
                 <li>Corte por mitad</li>
+                <li>Corte en tres</li>
                 <li>Corte en cuatro</li>
+                <li>Corte en seis</li>
+                <li>Corte en ocho</li>
               </ul>
               <div class="sub">Productos</div>
               <ul>
@@ -1298,6 +1301,7 @@
               <p>En estos productos solamente se puede hacer corte en cabezas de res.</p>
               <div class="sub">Cortes permitidos</div>
               <ul>
+                <li>Cabeza: corte por mitad</li>
                 <li>Cabeza: corte en cuatro</li>
                 <li>Cabeza: corte sin tapa</li>
               </ul>
@@ -2071,7 +2075,7 @@ const DEFAULT_CLIENTS = [
 
 const CATEGORY_RULES = {
   "Cajas de Menudo":{
-    cuts:["Sin corte","Enteras","Corte por mitad","Corte en cuatro"],
+    cuts:["Sin corte","Enteras","Corte por mitad","Corte en tres","Corte en cuatro","Corte en seis","Corte en ocho"],
     products:["Bolsa","Menudo Nacional","Menudo Excel","Menudo Washington","Menudo Canadian"]
   },
   "Viscera Blanca":{
@@ -2079,7 +2083,7 @@ const CATEGORY_RULES = {
     products:["Panza","Libro","Pata Morena","Pata Blanca","Mano blanca","Mano morena","Tripa","Tripa de Rastro","Quajo","Teleco"]
   },
   "Viscera Roja":{
-    cuts:["Sin corte","Cabeza: corte en cuatro","Cabeza: corte sin tapa"],
+    cuts:["Sin corte","Cabeza: corte por mitad","Cabeza: corte en cuatro","Cabeza: corte sin tapa"],
     products:["Cabeza","Cabeza de rastro","Cabeza sin lengua","Hígado","Corazón","Lengua","Bofe","Teleco"]
   }
 };
@@ -2479,7 +2483,7 @@ function getCutOptions(product){
 
   if(product.category === "Viscera Roja"){
     if(n.includes("cabeza")){
-      return ["Sin corte","Cabeza: corte en cuatro","Cabeza: corte sin tapa"];
+      return ["Sin corte","Cabeza: corte por mitad","Cabeza: corte en cuatro","Cabeza: corte sin tapa"];
     }
 
     return ["Sin corte"];
